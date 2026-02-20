@@ -4,35 +4,6 @@ import { useContent } from "@/lib/content-context";
 
 export function Services() {
   const { content } = useContent();
-  const services = [
-    {
-      title: "מפה נומרולוגית אישית",
-      description: "מפגש היכרות עמוק דרך תאריך הלידה והשם.",
-      bullets: [
-        "זיהוי דפוסי התנהגות עמוקים",
-        "הבנת חוזקות ואתגרים אישיים",
-        "בהירות לגבי ייעוד ודרך"
-      ]
-    },
-    {
-      title: "אימון זוגי ממוקד",
-      description: "ליווי תהליכי שבועי ליצירת תקשורת בונה.",
-      bullets: [
-        "הקניית כלי הקשבה פעילה",
-        "בניית הסכמות וגבולות בריאים",
-        "החזרת האינטימיות והקרבה"
-      ]
-    },
-    {
-      title: "השילוב הייחודי",
-      description: "מספרים שמגלים דפוסים + אימון שמייצר שינוי.",
-      bullets: [
-        "קיצור תהליכים בזכות אבחון מהיר",
-        "הבנת הדינמיקה בין המפות של שניכם",
-        "תוכנית עבודה מעשית ומשותפת"
-      ]
-    }
-  ];
 
   return (
     <section className="py-24 bg-background relative overflow-hidden">
@@ -48,7 +19,7 @@ export function Services() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {services.map((s, i) => (
+          {content.services.cards.map((s, i) => (
             <Card key={i} className="bg-white border-border/40 shadow-lg shadow-primary/5 overflow-hidden group hover:-translate-y-1 transition-all duration-300" data-testid={`service-${i}`}>
               <div className="h-2 bg-gradient-to-l from-primary/60 to-primary/20"></div>
               <CardHeader className="text-center pb-4 pt-8">

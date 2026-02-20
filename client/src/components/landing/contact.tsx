@@ -174,11 +174,11 @@ export function Contact() {
                     <FormLabel>איך תרצי שאצור איתך קשר?</FormLabel>
                     <FormControl>
                       <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-6 pt-2" dir="rtl">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           <RadioGroupItem value="phone" id="contact-phone" data-testid="radio-phone" />
                           <Label htmlFor="contact-phone" className="cursor-pointer">שיחת טלפון</Label>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           <RadioGroupItem value="whatsapp" id="contact-whatsapp" data-testid="radio-whatsapp" />
                           <Label htmlFor="contact-whatsapp" className="cursor-pointer">הודעת וואטסאפ</Label>
                         </div>
@@ -193,16 +193,17 @@ export function Contact() {
                 control={form.control}
                 name="agree"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-x-reverse space-y-0 rounded-md p-4 bg-white/50 border border-border/50">
+                  <FormItem className="flex flex-row items-start gap-3 space-y-0 rounded-md p-4 bg-white/50 border border-border/50">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
                         data-testid="checkbox-agree"
+                        className="mt-0.5"
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
+                      <FormLabel className="cursor-pointer">
                         אני מאשרת יצירת קשר ושליחת הודעות
                       </FormLabel>
                     </div>

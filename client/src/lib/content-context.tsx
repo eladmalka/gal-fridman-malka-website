@@ -23,10 +23,19 @@ export type ContentState = {
   services: {
     title: string;
     description: string;
+    cards: {
+      title: string;
+      description: string;
+      bullets: string[];
+    }[];
   };
   benefits: {
     title: string;
     description: string;
+    items: {
+      title: string;
+      description: string;
+    }[];
   };
   gallery: {
     title: string;
@@ -54,10 +63,32 @@ const defaultContent: ContentState = {
   services: {
     title: "איך נוכל לעבוד ביחד?",
     description: "תהליכים מדויקים המשלבים עומק רוחני ופרקטיקה יומיומית",
+    cards: [
+      {
+        title: "מפה נומרולוגית אישית",
+        description: "מפגש היכרות עמוק דרך תאריך הלידה והשם.",
+        bullets: ["זיהוי דפוסי התנהגות עמוקים", "הבנת חוזקות ואתגרים אישיים", "בהירות לגבי ייעוד ודרך"],
+      },
+      {
+        title: "אימון זוגי ממוקד",
+        description: "ליווי תהליכי שבועי ליצירת תקשורת בונה.",
+        bullets: ["הקניית כלי הקשבה פעילה", "בניית הסכמות וגבולות בריאים", "החזרת האינטימיות והקרבה"],
+      },
+      {
+        title: "השילוב הייחודי",
+        description: "מספרים שמגלים דפוסים + אימון שמייצר שינוי.",
+        bullets: ["קיצור תהליכים בזכות אבחון מהיר", "הבנת הדינמיקה בין המפות של שניכם", "תוכנית עבודה מעשית ומשותפת"],
+      },
+    ],
   },
   benefits: {
     title: "למה נומרולוגיה ואימון זוגי עובדים כל כך טוב ביחד?",
     description: "כשמשלבים אבחון מדויק עם כלים מעשיים, התהליך הופך להיות ברור, קצר ואפקטיבי הרבה יותר.",
+    items: [
+      { title: "זיהוי מהיר של שורש הבעיה", description: "במקום שבועות של שיחות בניסיון להבין \"מה לא עובד\", המפה הנומרולוגית משקפת באופן צלול את דפוסי התקשורת והטריגרים של כל אחד מכם." },
+      { title: "הפיכת תובנות להסכמות", description: "להבין זה חשוב, אבל זה לא מספיק. כאן נכנס האימון הזוגי שלוקח את ההבנות מהמפה והופך אותן לגבולות בריאים, שגרה מיטיבה והסכמות מעשיות ליומיום." },
+      { title: "צמיחה אישית מתוך הקשר", description: "התהליך מאפשר לכל אחד להיות הגרסה הטובה ביותר של עצמו, ולהבין איך המסע האישי שלו תורם או מאתגר את המערכת הזוגית כולה." },
+    ],
   },
   gallery: {
     title: "הקליניקה והאווירה",
@@ -123,10 +154,19 @@ function buildContentState(
     services: {
       title: t("services.title", defaultContent.services.title),
       description: t("services.description", defaultContent.services.description),
+      cards: defaultContent.services.cards.map((card, i) => ({
+        title: t(`services.card${i}.title`, card.title),
+        description: t(`services.card${i}.description`, card.description),
+        bullets: card.bullets.map((b, j) => t(`services.card${i}.bullet${j}`, b)),
+      })),
     },
     benefits: {
       title: t("benefits.title", defaultContent.benefits.title),
       description: t("benefits.description", defaultContent.benefits.description),
+      items: defaultContent.benefits.items.map((item, i) => ({
+        title: t(`benefits.item${i}.title`, item.title),
+        description: t(`benefits.item${i}.description`, item.description),
+      })),
     },
     gallery: {
       title: t("gallery.title", defaultContent.gallery.title),

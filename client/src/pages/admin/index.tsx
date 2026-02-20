@@ -299,7 +299,7 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    const texts = {
+    const texts: Record<string, string> = {
       "hero.badge": content.hero.badge,
       "hero.titleMain": content.hero.titleMain,
       "hero.titleSub": content.hero.titleSub,
@@ -313,6 +313,17 @@ export default function Admin() {
       "contact.title": content.contact.title,
       "contact.subtitle": content.contact.subtitle,
     };
+    content.services.cards.forEach((card, i) => {
+      texts[`services.card${i}.title`] = card.title;
+      texts[`services.card${i}.description`] = card.description;
+      card.bullets.forEach((b, j) => {
+        texts[`services.card${i}.bullet${j}`] = b;
+      });
+    });
+    content.benefits.items.forEach((item, i) => {
+      texts[`benefits.item${i}.title`] = item.title;
+      texts[`benefits.item${i}.description`] = item.description;
+    });
     setLocalTexts(texts);
     setSavedTexts(texts);
   }, [content]);
@@ -897,6 +908,25 @@ export default function Admin() {
                     <Label>כותרת משנית</Label>
                     <Input value={localTexts["services.description"] ?? ""} onChange={(e) => handleUpdateText('services.description', e.target.value)} />
                   </div>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="space-y-2 bg-muted/30 rounded-lg p-4 border border-border/50">
+                      <h4 className="font-semibold text-sm text-primary/80">כרטיס {i + 1}</h4>
+                      <div className="space-y-2">
+                        <Label className="text-xs">כותרת</Label>
+                        <Input value={localTexts[`services.card${i}.title`] ?? ""} onChange={(e) => handleUpdateText(`services.card${i}.title`, e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">תיאור</Label>
+                        <Input value={localTexts[`services.card${i}.description`] ?? ""} onChange={(e) => handleUpdateText(`services.card${i}.description`, e.target.value)} />
+                      </div>
+                      {[0, 1, 2].map((j) => (
+                        <div key={j} className="space-y-1">
+                          <Label className="text-xs">נקודה {j + 1}</Label>
+                          <Input value={localTexts[`services.card${i}.bullet${j}`] ?? ""} onChange={(e) => handleUpdateText(`services.card${i}.bullet${j}`, e.target.value)} />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
                 </div>
                 <div className="space-y-4 border-b pb-6">
                   <h3 className="font-bold text-lg text-primary">למה אנחנו</h3>
@@ -908,6 +938,19 @@ export default function Admin() {
                     <Label>כותרת משנית</Label>
                     <Textarea value={localTexts["benefits.description"] ?? ""} onChange={(e) => handleUpdateText('benefits.description', e.target.value)} className="h-20 resize-none" />
                   </div>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="space-y-2 bg-muted/30 rounded-lg p-4 border border-border/50">
+                      <h4 className="font-semibold text-sm text-primary/80">פריט {i + 1}</h4>
+                      <div className="space-y-2">
+                        <Label className="text-xs">כותרת</Label>
+                        <Input value={localTexts[`benefits.item${i}.title`] ?? ""} onChange={(e) => handleUpdateText(`benefits.item${i}.title`, e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">תיאור</Label>
+                        <Textarea value={localTexts[`benefits.item${i}.description`] ?? ""} onChange={(e) => handleUpdateText(`benefits.item${i}.description`, e.target.value)} className="h-20 resize-none" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div className="space-y-4 border-b pb-6">
                   <h3 className="font-bold text-lg text-primary">גלריה</h3>

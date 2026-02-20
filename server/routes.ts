@@ -32,8 +32,24 @@ const upload = multer({
   },
 });
 
-async function sendLeadEmail(lead: { name: string; phone: string; email: string; status: string; goals: string }) {
+const statusLabels: Record<string, string> = {
+  married: "נשואה",
+  relationship: "בזוגיות",
+  single: "רווקה",
+  other: "אחר",
+};
+
+const contactMethodLabels: Record<string, string> = {
+  phone: "שיחת טלפון",
+  whatsapp: "הודעת וואטסאפ",
+};
+
+async function sendLeadEmail(lead: { name: string; phone: string; email: string; status: string; goals: string; contactMethod: string }) {
   try {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      console.log("Gmail credentials not set, skipping email notification");
+      return false;
+    }
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -41,6 +57,9 @@ async function sendLeadEmail(lead: { name: string; phone: string; email: string;
         pass: process.env.GMAIL_APP_PASSWORD,
       },
     });
+
+    const phoneForWhatsApp = lead.phone.replace(/^0/, "972").replace(/[^0-9]/g, "");
+    const whatsappLink = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(`היי ${lead.name}, קיבלתי את הפנייה שלך דרך האתר. אשמח לדבר!`)}`;
 
     await transporter.sendMail({
       from: `"אתר גל פרידמן מלכה" <${process.env.GMAIL_USER}>`,
@@ -51,17 +70,53 @@ async function sendLeadEmail(lead: { name: string; phone: string; email: string;
           <h2 style="color: #c9a4a0;">פנייה חדשה מהאתר</h2>
           <table style="width: 100%; border-collapse: collapse;">
             <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">שם:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${lead.name}</td></tr>
-            <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">טלפון:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${lead.phone}</td></tr>
-            <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">אימייל:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${lead.email}</td></tr>
-            <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">סטטוס זוגי:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${lead.status}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">טלפון:</td><td style="padding: 8px; border-bottom: 1px solid #eee;"><a href="tel:${lead.phone}">${lead.phone}</a></td></tr>
+            <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">אימייל:</td><td style="padding: 8px; border-bottom: 1px solid #eee;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
+            <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">סטטוס זוגי:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${statusLabels[lead.status] || lead.status}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold; border-bottom: 1px solid #eee;">דרך יצירת קשר מועדפת:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${contactMethodLabels[lead.contactMethod] || lead.contactMethod}</td></tr>
             <tr><td style="padding: 8px; font-weight: bold;">מה רוצה לשפר:</td><td style="padding: 8px;">${lead.goals}</td></tr>
           </table>
+          <div style="margin-top: 20px; text-align: center;">
+            <a href="${whatsappLink}" style="display: inline-block; background-color: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">שלחי הודעת וואטסאפ ל${lead.name}</a>
+          </div>
         </div>
       `,
     });
     return true;
   } catch (error) {
     console.error("Email sending failed:", error);
+    return false;
+  }
+}
+
+async function sendWhatsAppNotification(lead: { name: string; phone: string; email: string; status: string; goals: string; contactMethod: string }) {
+  try {
+    const phoneForWhatsApp = "972523491792";
+    const message = `*פנייה חדשה מהאתר!*\n\n` +
+      `*שם:* ${lead.name}\n` +
+      `*טלפון:* ${lead.phone}\n` +
+      `*אימייל:* ${lead.email}\n` +
+      `*סטטוס:* ${statusLabels[lead.status] || lead.status}\n` +
+      `*דרך קשר מועדפת:* ${contactMethodLabels[lead.contactMethod] || lead.contactMethod}\n` +
+      `*מה רוצה לשפר:* ${lead.goals}`;
+
+    const callMeBotApiKey = process.env.CALLMEBOT_API_KEY;
+    if (!callMeBotApiKey) {
+      console.log("CallMeBot API key not set, skipping WhatsApp notification");
+      return false;
+    }
+
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${phoneForWhatsApp}&text=${encodeURIComponent(message)}&apikey=${callMeBotApiKey}`;
+    const response = await fetch(url);
+    if (response.ok) {
+      console.log("WhatsApp notification sent successfully");
+      return true;
+    } else {
+      console.error("WhatsApp notification failed:", await response.text());
+      return false;
+    }
+  } catch (error) {
+    console.error("WhatsApp notification error:", error);
     return false;
   }
 }
@@ -228,9 +283,12 @@ export async function registerRoutes(
       }
       const lead = await storage.createLead(parsed.data);
       try {
-        await sendLeadEmail(parsed.data);
-      } catch (emailErr) {
-        console.error("Email sending failed (lead was saved):", emailErr);
+        await Promise.allSettled([
+          sendLeadEmail(parsed.data),
+          sendWhatsAppNotification(parsed.data),
+        ]);
+      } catch (notifyErr) {
+        console.error("Notification failed (lead was saved):", notifyErr);
       }
       res.json({ success: true, lead });
     } catch (error) {
