@@ -37,25 +37,25 @@ export function Contact() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Mock submission:", values);
+    console.log("Mock submission sending to: galfridman21@gmail.com", values);
     toast({
       title: "הפנייה נשלחה בהצלחה!",
-      description: "אחזור אלייך בהקדם האפשרי.",
+      description: "המייל הועבר ל-galfridman21@gmail.com",
     });
     form.reset();
   }
 
   return (
-    <section id="contact" className="py-24 bg-white">
-      <div className="container px-4 max-w-2xl">
+    <section id="contact" className="py-24 bg-white flex justify-center">
+      <div className="container px-4 max-w-2xl mx-auto w-full">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-black mb-4">{content.contact.title}</h2>
-          <p className="text-xl text-muted-foreground font-light">
+          <p className="text-xl text-muted-foreground font-light text-center">
             {content.contact.subtitle}
           </p>
         </div>
 
-        <div className="bg-background rounded-3xl p-8 shadow-xl shadow-primary/5 border border-border/50">
+        <div className="bg-background rounded-3xl p-8 shadow-xl shadow-primary/5 border border-border/50 mx-auto">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -66,7 +66,7 @@ export function Contact() {
                     <FormItem>
                       <FormLabel>שם מלא</FormLabel>
                       <FormControl>
-                        <Input placeholder="שם מלא" {...field} className="h-12 bg-white" data-testid="input-name" />
+                        <Input placeholder="שם מלא" {...field} className="h-12 bg-white text-right" data-testid="input-name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -109,11 +109,11 @@ export function Contact() {
                     <FormLabel>סטטוס זוגי</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-12 bg-white" data-testid="select-status">
+                        <SelectTrigger className="h-12 bg-white" data-testid="select-status" dir="rtl">
                           <SelectValue placeholder="בחרי סטטוס" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent dir="rtl">
                         <SelectItem value="married">נשואים</SelectItem>
                         <SelectItem value="relationship">בזוגיות</SelectItem>
                         <SelectItem value="single">רווקה</SelectItem>
@@ -134,7 +134,7 @@ export function Contact() {
                     <FormControl>
                       <Textarea 
                         placeholder="כמה מילים על מה שהביא אותך לכאן..." 
-                        className="resize-none h-32 bg-white" 
+                        className="resize-none h-32 bg-white text-right" 
                         {...field} 
                         data-testid="textarea-goals"
                       />

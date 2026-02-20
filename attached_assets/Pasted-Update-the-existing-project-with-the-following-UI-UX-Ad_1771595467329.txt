@@ -1,0 +1,67 @@
+Update the existing project with the following UI/UX + Admin + WhatsApp + Form requirements. Implement everything end-to-end.
+
+1) Centering & layout polish (Hebrew RTL)
+- Center-align ALL texts across the landing page where it looks best:
+  - Hero title/subtitle/CTAs centered
+  - Section titles centered
+  - Paragraph blocks centered (but keep max-width so it stays readable)
+- Center all logos / brand marks / icons (if any), including in the header/hero.
+- Keep a premium, clean composition: consistent spacing, max-width containers, and balanced vertical rhythm.
+- Keep the antique pink / dusty rose design language, rounded corners, subtle shadows, calm typography.
+
+2) Lead Form layout
+- Center the entire lead form section:
+  - The form card itself should be centered horizontally on the page
+  - Inputs aligned RTL, but the whole block centered
+  - Clear success/error states, still centered
+- Keep the CTA hierarchy clear and visually appealing.
+
+3) Admin Image Manager: EVERY image must be replaceable
+- I want an option to replace EVERY image that exists anywhere on the landing page.
+- Implement a strict “image slots” registry:
+  - Define a slot key for each image used in the UI (no exceptions).
+  - Examples (adjust to match the actual UI):
+    - HEADER_LOGO
+    - HERO_IMAGE (or HERO_BACKGROUND)
+    - HERO_BADGE_ICON (if used)
+    - PROFILE_IMAGE (About section)
+    - SERVICES_IMAGE_1 / SERVICES_IMAGE_2 / SERVICES_IMAGE_3 (if there are images in service cards)
+    - GALLERY_1..GALLERY_N
+    - FOOTER_LOGO (if used)
+    - Any decorative/background images that appear in sections
+- Admin page /admin must show ALL slot keys automatically (driven by the registry), with:
+  - Current thumbnail
+  - “Replace” button (upload)
+  - “Remove / revert to placeholder”
+  - Edit alt text (Hebrew) + optional caption (Hebrew)
+  - If gallery exists: reorder via drag & drop
+- Landing page must render images strictly by slot keys so changing a slot updates immediately.
+
+4) WhatsApp prefilled message changes
+- Remove the parts that ask for the user’s name and callback phone from the WhatsApp auto-message.
+- New prefilled Hebrew message (URL-encode it and use it in the WhatsApp link):
+  "היי גל, אשמח לשיחת היכרות קצרה לגבי נומרולוגיה בשילוב אימון זוגי."
+- Keep the WhatsApp phone number as previously defined:
+  0523491792 -> international: +972523491792
+
+5) Lead Form destination email
+- The lead form must send directly to this email (hard requirement):
+  galfridman21@gmail.com
+- Use server-side email sending (SMTP/Nodemailer or provider).
+- Make sure form submission emails include:
+  - timestamp
+  - all form fields
+  - page/source identifier (e.g., “Landing Page Lead”)
+
+6) Reliability + safety
+- Do not break if integrations are missing:
+  - If SMTP not configured, show clear admin/server warnings but keep UI functional.
+- Keep anti-spam measures (honeypot + rate limit).
+
+Now implement all these changes in the code:
+- Centered typography/layout updates
+- Centered lead form block
+- Complete slot-based admin image replacement for every landing page image
+- Updated WhatsApp prefilled message (short version only)
+- Lead form email goes to galfridman21@gmail.com
+Provide updated file structure and clear setup instructions.

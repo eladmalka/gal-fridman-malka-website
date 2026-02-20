@@ -1,0 +1,81 @@
+Add/upgrade the Admin Image Manager so I can replace ANY existing image on the landing page (not only add new ones). I want to upload any image and the system should automatically resize/crop it to the correct aspect ratio for that specific slot, regardless of file size or original resolution, while preserving high visual quality.
+
+Core Requirements:
+1) “Image Slots” system
+   - Define a fixed set of image slots used by the landing page:
+     - HERO_IMAGE (hero background / hero side image)
+     - PROFILE_IMAGE (about section portrait)
+     - GALLERY_1..GALLERY_N (gallery items)
+     - OPTIONAL: SERVICE_CARD_ICONS (if you use icons/images)
+   - Each slot has a target aspect ratio + recommended dimensions:
+     - HERO_IMAGE: 16:9 (e.g., 1920x1080)
+     - PROFILE_IMAGE: 1:1 (e.g., 800x800)
+     - GALLERY: 4:3 or 1:1 (choose one consistently)
+   - Landing page must render images by slot key, so replacing an image updates instantly.
+
+2) Admin UX (must be simple and powerful)
+   - /admin shows a list/grid of all slots with current thumbnail previews.
+   - Each slot has:
+     - “Replace image” button (upload new file)
+     - “Remove” (revert to placeholder)
+     - Edit fields: Alt text (Hebrew), optional caption/title (Hebrew)
+     - Show current image metadata: original size, processed sizes, file type
+   - Drag & drop upload supported.
+   - For gallery slots: allow reorder (drag & drop) and add/remove slots if needed.
+
+3) Automatic image processing (no AI required, but AI optional if easy)
+   - On upload, the server must:
+     - Read the image safely
+     - Create optimized derivatives (multiple sizes) for responsive delivery:
+       - e.g., 400px, 800px, 1200px, 1920px width (depending on slot)
+     - Convert to modern format (WebP or AVIF) with a high-quality setting
+     - Preserve quality: avoid over-compression; keep sharp text/edges
+     - Enforce file size limits and protect against malicious uploads
+   - Use a proven library:
+     - Node: “sharp”
+     - Next.js: server route handling with sharp
+   - Cropping strategy:
+     - Default: “smart center crop” to match the slot aspect ratio
+     - Provide an admin option per slot:
+       - Crop mode: “cover” (crop) or “contain” (add padding / letterbox)
+       - Focal point: center by default
+   - Important: “Fit to slot” must work even if original is huge (e.g., 8K) or tiny.
+   - Preserve EXIF orientation correctly (rotate if needed).
+   - Keep original upload stored (optional), but always serve optimized derivatives.
+
+4) Optional “AI” enhancement (only if not complicated)
+   - If easy, add an optional toggle:
+     - “AI Enhance” (super-resolution / smart crop) using a local/offline approach or a simple integration stub.
+   - If it adds complexity, SKIP AI. The default sharp-based pipeline is enough.
+
+5) Performance + quality
+   - Use <picture> / srcset for responsive images.
+   - Lazy-load gallery images.
+   - Use blur placeholders (optional) generated on upload.
+   - Ensure the antique pink / premium UI style remains consistent:
+     - Rounded image corners
+     - Subtle shadow
+     - RTL-safe captions
+
+6) Data model + API
+   - Persist image slot mapping in a JSON file or DB (choose one):
+     - slot_key -> { urls, widths, format, alt, caption, updated_at }
+   - Provide endpoints:
+     - GET /api/images (returns all slots + metadata)
+     - POST /api/images/upload (multipart upload: slot_key + file)
+     - PUT /api/images/:slot_key (update alt/caption/crop options)
+     - DELETE /api/images/:slot_key (revert to placeholder)
+
+7) Output expected
+   - Implement the full code changes:
+     - Admin UI for slot-based replacement
+     - Server image pipeline with sharp
+     - Responsive rendering on landing page using slot keys
+     - Clear README instructions (including installing sharp dependencies if needed)
+   - Do NOT break if processing fails: show an error message to admin and keep the old image.
+
+Make sure everything stays:
+- Hebrew RTL
+- Mobile-first
+- Rounded cards, subtle shadows, calm typography
+- Antique pink / dusty rose design language

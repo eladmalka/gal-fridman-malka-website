@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { ImagePlus, Trash2, GripVertical, LogOut, Check } from "lucide-react";
+import { ImagePlus, Trash2, GripVertical, LogOut, Check, UploadCloud } from "lucide-react";
 import { useContent } from "@/lib/content-context";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,6 +16,8 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeSlot, setActiveSlot] = useState<string | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +42,49 @@ export default function Admin() {
     });
   };
 
-  const deleteImage = (id: number) => {
+  const handleUpdateImageSlotAlt = (key: string, alt: string) => {
+    setContent({
+      ...content,
+      images: {
+        ...content.images,
+        [key]: {
+          ...content.images[key],
+          alt
+        }
+      }
+    });
+  };
+
+  const triggerUpload = (slotKey: string) => {
+    setActiveSlot(slotKey);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && activeSlot) {
+      const url = URL.createObjectURL(file);
+      // In mockup mode we just create an object URL. In real app, this would be an API call to sharp.
+      setContent({
+        ...content,
+        images: {
+          ...content.images,
+          [activeSlot]: {
+            ...content.images[activeSlot],
+            url
+          }
+        }
+      });
+      
+      toast({
+        title: "התמונה הוחלפה בהצלחה",
+        description: "השינוי יעודכן באתר מיד."
+      });
+    }
+  };
+
+  // Gallery
+  const deleteGalleryImage = (id: number) => {
     setContent({
       ...content,
       gallery: {
@@ -50,7 +94,7 @@ export default function Admin() {
     });
   };
 
-  const handleUpdateImageAlt = (id: number, alt: string) => {
+  const handleUpdateGalleryImageAlt = (id: number, alt: string) => {
     setContent({
       ...content,
       gallery: {
@@ -116,6 +160,13 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 font-sans" dir="rtl">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileUpload} 
+        accept="image/*" 
+        className="hidden" 
+      />
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold font-heading">לוח בקרה</h1>
@@ -126,9 +177,10 @@ export default function Admin() {
         </div>
         
         <Tabs defaultValue="texts" className="w-full" dir="rtl">
-          <TabsList className="grid w-full grid-cols-3 h-14 bg-white shadow-sm border border-border/50">
-            <TabsTrigger value="texts" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">ניהול תוכן</TabsTrigger>
-            <TabsTrigger value="gallery" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">הגלריה</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 h-14 bg-white shadow-sm border border-border/50">
+            <TabsTrigger value="texts" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">תוכן</TabsTrigger>
+            <TabsTrigger value="images" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">תמונות ראשיות</TabsTrigger>
+            <TabsTrigger value="gallery" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">גלריה</TabsTrigger>
             <TabsTrigger value="settings" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">הגדרות</TabsTrigger>
           </TabsList>
           
@@ -194,7 +246,7 @@ export default function Admin() {
                 <div className="space-y-4 border-b pb-6">
                   <h3 className="font-bold text-lg text-primary">גלריה</h3>
                   <div className="space-y-2">
-                    <Label>כותרת ראשה לגלריה</Label>
+                    <Label>כותרת ראשית לגלריה</Label>
                     <Input value={content.gallery.title} onChange={(e) => handleUpdateText('gallery', 'title', e.target.value)} />
                   </div>
                 </div>
@@ -215,6 +267,50 @@ export default function Admin() {
             </Card>
           </TabsContent>
           
+          <TabsContent value="images" className="mt-6 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>ניהול חריצי תמונות (Image Slots)</CardTitle>
+                <CardDescription>החלפת התמונות הראשיות באתר (אזור Hero ואזורים נוספים).</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {Object.entries(content.images).map(([key, slot]) => (
+                  <Card key={key} className="p-4 flex flex-col md:flex-row items-start md:items-center gap-6 bg-background border-border/50">
+                    <div className="relative group w-32 h-32 rounded-lg overflow-hidden shrink-0 bg-secondary flex items-center justify-center">
+                      <img src={slot.url} alt={slot.alt} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                         <Button size="sm" variant="secondary" onClick={() => triggerUpload(key)}>החלף</Button>
+                      </div>
+                    </div>
+                    <div className="flex-grow space-y-4 w-full">
+                      <div>
+                        <h4 className="font-bold text-lg">{key}</h4>
+                        <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-md inline-block mt-1">
+                          יחס אידאלי: {slot.aspectRatioLabel}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">טקסט חלופי (Alt)</Label>
+                        <Input 
+                          value={slot.alt} 
+                          onChange={(e) => handleUpdateImageSlotAlt(key, e.target.value)}
+                          placeholder="תיאור התמונה לנגישות" 
+                          className="bg-white" 
+                        />
+                      </div>
+                    </div>
+                    <div className="w-full md:w-auto mt-2 md:mt-0 flex md:block">
+                      <Button className="w-full md:w-auto gap-2" onClick={() => triggerUpload(key)}>
+                        <UploadCloud size={16} />
+                        העלה חדש
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="gallery" className="mt-6 space-y-6">
             <Card className="border-dashed bg-white/50">
               <CardContent className="pt-6 flex flex-col items-center justify-center py-12 text-muted-foreground">
@@ -226,7 +322,7 @@ export default function Admin() {
             </Card>
 
             <div className="space-y-4">
-              <h2 className="text-xl font-bold mb-4 font-heading">תמונות קיימות ({content.gallery.images.length})</h2>
+              <h2 className="text-xl font-bold mb-4 font-heading">תמונות קיימות בגלריה ({content.gallery.images.length})</h2>
               {content.gallery.images.map((img) => (
                 <Card key={img.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white">
                   <div className="cursor-grab text-muted-foreground hover:text-foreground hidden sm:block">
@@ -237,12 +333,12 @@ export default function Admin() {
                     <Label className="text-xs mb-1 block text-muted-foreground">טקסט חלופי (Alt)</Label>
                     <Input 
                       value={img.alt} 
-                      onChange={(e) => handleUpdateImageAlt(img.id, e.target.value)}
+                      onChange={(e) => handleUpdateGalleryImageAlt(img.id, e.target.value)}
                       placeholder="טקסט חלופי (Alt)" 
                       className="w-full bg-transparent" 
                     />
                   </div>
-                  <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive self-end sm:self-auto" size="icon" onClick={() => deleteImage(img.id)} data-testid={`btn-delete-img-${img.id}`}>
+                  <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive self-end sm:self-auto" size="icon" onClick={() => deleteGalleryImage(img.id)} data-testid={`btn-delete-img-${img.id}`}>
                     <Trash2 size={18} />
                   </Button>
                 </Card>

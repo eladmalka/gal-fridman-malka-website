@@ -1,4 +1,3 @@
-import img from "@/assets/images/gallery-1.jpg";
 import { useContent } from "@/lib/content-context";
 
 export function Benefits() {
@@ -8,7 +7,7 @@ export function Benefits() {
       <div className="container px-4">
         <div className="max-w-4xl mx-auto text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">{content.benefits.title}</h2>
-          <p className="text-xl text-muted-foreground font-light leading-relaxed">
+          <p className="text-xl text-muted-foreground font-light leading-relaxed text-center">
             {content.benefits.description}
           </p>
         </div>
@@ -42,7 +41,7 @@ export function Benefits() {
           
           <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
             <div className="absolute inset-0 bg-primary/10 z-10 mix-blend-multiply"></div>
-            <img src={img} alt="חדר טיפולים" className="w-full h-full object-cover" />
+            <img src={content.images.BENEFITS_IMAGE.url} alt={content.images.BENEFITS_IMAGE.alt} className="w-full h-full object-cover" />
           </div>
         </div>
       </div>

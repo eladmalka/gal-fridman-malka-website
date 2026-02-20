@@ -3,6 +3,12 @@ import img1 from "@/assets/images/gallery-1.jpg";
 import img2 from "@/assets/images/gallery-2.jpg";
 import img3 from "@/assets/images/hero.jpg";
 
+export type ImageSlot = {
+  url: string;
+  alt: string;
+  aspectRatioLabel: string;
+};
+
 export type ContentState = {
   hero: {
     badge: string;
@@ -28,6 +34,9 @@ export type ContentState = {
   contact: {
     title: string;
     subtitle: string;
+  };
+  images: {
+    [key: string]: ImageSlot;
   };
 };
 
@@ -60,6 +69,10 @@ const defaultContent: ContentState = {
   contact: {
     title: "בואי נתחיל",
     subtitle: "השאירי פרטים לשיחת היכרות קצרה ללא עלות",
+  },
+  images: {
+    HERO_BACKGROUND: { url: img3, alt: "רקע קליניקה נומרולוגיה", aspectRatioLabel: "16:9 (מומלץ 1920x1080)" },
+    BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)" }
   }
 };
 
