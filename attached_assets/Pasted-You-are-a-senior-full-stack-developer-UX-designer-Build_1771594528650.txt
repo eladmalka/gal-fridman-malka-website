@@ -1,0 +1,133 @@
+You are a senior full-stack developer + UX designer. Build a modern, elegant landing page in HEBREW (RTL) for a numerologist and couples coach.
+
+Brand / Title:
+Main headline (H1, Hebrew): "גל פרידמן מלכה – נומרולוגית ומאמנת זוגית"
+
+Primary Goals:
+1) A public Hebrew RTL landing page (frontend)
+2) A simple admin interface to upload/replace/reorder images that will appear on the landing page later (image manager)
+3) A lead-capture form that sends details directly to email, and also triggers an SMS + WhatsApp notification (implement via Twilio/WhatsApp Business if configured; otherwise mock with logs + warning)
+
+WhatsApp Direct Chat Button (must-have):
+- Add a WhatsApp CTA button in the Hero section AND a floating WhatsApp button (fixed bottom-right) on all pages.
+- WhatsApp phone number (Israel): 0523491792
+- Convert to international format: +972523491792 (remove leading 0, add +972)
+- On click, open this URL (use exactly this pre-encoded link):
+  https://wa.me/972523491792?text=%D7%94%D7%99%D7%99%20%D7%92%D7%9C%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%99%D7%97%D7%AA%20%D7%94%D7%99%D7%9B%D7%A8%D7%95%D7%AA%20%D7%A7%D7%A6%D7%A8%D7%94%20%D7%9C%D7%92%D7%91%D7%99%20%D7%A0%D7%95%D7%9E%D7%A8%D7%95%D7%9C%D7%95%D7%92%D7%99%D7%94%20%D7%91%D7%A9%D7%99%D7%9C%D7%95%D7%91%20%D7%90%D7%99%D7%9E%D7%95%D7%9F%20%D7%96%D7%95%D7%92%D7%99.%20%D7%A9%D7%9E%D7%99%3A%20_____.%20%D7%98%D7%9C%D7%A4%D7%95%D7%9F%20%D7%9C%D7%97%D7%96%D7%A8%D7%94%3A%20_____.
+- Button label (Hebrew): "שלחי הודעה בוואטסאפ"
+- Ensure opens in a new tab and is accessible (aria-label).
+
+Visual Style:
+- “Antique pink” / dusty rose palette + soft cream accents
+- Minimal, premium, feminine aesthetic
+- Rounded cards, subtle shadows, calm typography
+- Full RTL support everywhere (layout + text + inputs)
+- Mobile-first responsive design
+- Gentle classy animations (fade/slide) only
+
+Landing Page Sections (Hebrew content required, high-quality copy):
+A) Hero
+   - H1 as above
+   - Subheadline: emphasize unique combination: numerology insights + practical couples coaching tools
+   - Primary CTA button: "קבעי שיחת היכרות"
+   - Secondary CTA button: WhatsApp (as above)
+
+B) Trust / Social Proof
+   - 3 short testimonial placeholders (Hebrew)
+   - A “value strip” with 3 highlights:
+     "אבחון חד ומדויק", "כלים זוגיים פרקטיים", "תהליך מותאם אישית"
+
+C) Services
+   - 3 service cards:
+     1) "מפה נומרולוגית אישית"
+     2) "אימון זוגי ממוקד"
+     3) "שילוב ייחודי: מספרים שמגלים דפוסים + אימון שמייצר שינוי"
+   - Each card includes 3 bullet benefits (Hebrew)
+
+D) Why the combination works (Benefits)
+   - Explain benefits of numerology combined with couples coaching:
+     - Identifying patterns, communication triggers, compatibility themes
+     - Turning insights into actionable agreements, boundaries, and routines
+     - Faster clarity + practical progress
+   - Keep it empowering and responsible (no medical/guarantees, no absolute promises)
+
+E) Image Gallery (dynamic)
+   - Grid/slider showing images (start with placeholders)
+   - Images must load dynamically from storage via API so admin updates reflect immediately
+   - Each image has optional title/alt text (Hebrew)
+
+F) Lead Form (most important)
+   - Fields (RTL):
+     * שם מלא
+     * טלפון
+     * אימייל
+     * סטטוס זוגי (dropdown)
+     * מה תרצי לשפר? (textarea)
+     * checkbox: "אני מאשרת/ת יצירת קשר"
+   - Client + server validation + success state
+   - On submit:
+     1) Send email to OWNER_EMAIL with full lead details
+     2) Send SMS to OWNER_PHONE with short summary
+     3) Send WhatsApp message to OWNER_WHATSAPP with short summary
+   - Anti-spam:
+     - honeypot field
+     - rate limit per IP
+     - simple challenge (lightweight captcha alternative)
+
+G) Footer
+   - Contact links: email, phone, WhatsApp
+   - Privacy note (Hebrew)
+   - “כל הזכויות שמורות”
+
+Admin Interface (simple, protected):
+- Route: /admin
+- Login: simple password stored in env ADMIN_PASSWORD
+- Image manager:
+  - Upload images, see thumbnails, delete, set order (drag & drop)
+  - Edit title/alt text (Hebrew)
+  - Save changes
+- Storage:
+  - OK to start with local filesystem (e.g., /public/uploads or /uploads)
+  - Make it cloud-ready (S3-compatible abstraction recommended)
+- API endpoints:
+  - GET /api/images
+  - POST /api/images (multipart upload)
+  - DELETE /api/images/:id
+  - PUT /api/images/reorder
+  - PUT /api/images/:id (update title/alt)
+
+Tech Requirements (choose ONE stack and implement end-to-end):
+Option 1 (preferred): Next.js (App Router) + TypeScript + Tailwind + API Routes
+Option 2: React (Vite) + Node/Express + TypeScript + Tailwind
+
+Integrations + Env Vars:
+- OWNER_EMAIL, OWNER_PHONE, OWNER_WHATSAPP
+- ADMIN_PASSWORD
+- Email (choose one):
+  - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (Nodemailer)
+  - OR SendGrid API key
+- Twilio:
+  - TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
+  - WHATSAPP_FROM (Twilio WhatsApp sender, e.g., "whatsapp:+14155238886")
+  - WHATSAPP_TO (owner WhatsApp, e.g., "whatsapp:+9725xxxxxxx")
+- If Twilio/Email keys are missing:
+  - Do not break; log the payload and show a clear “Not configured” warning
+
+Deliverables:
+1) Full Hebrew landing page copy for every section (professional, persuasive, warm, not mystical, no guarantees)
+2) Clean component layout + RTL styling
+3) Backend endpoints + integrations (email/SMS/WhatsApp)
+4) Admin image manager UI + auth
+5) README with setup steps:
+   - npm install
+   - env setup
+   - npm run dev
+6) A short checklist of what the owner edits later (texts, phone/email, images)
+
+Copywriting Constraints:
+- No guaranteed outcomes
+- Tone: warm, confident, empowering
+- Present numerology as a reflective tool + coaching as practical guidance
+- Keep language respectful and clear in Hebrew
+
+Now generate the full project code, file structure, and all required Hebrew text content.
