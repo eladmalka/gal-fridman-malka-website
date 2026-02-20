@@ -120,12 +120,12 @@ export async function registerRoutes(
         return res.status(400).json({ message: "No file uploaded" });
       }
       const filePath = `/uploads/${req.file.filename}`;
-      await storage.updateImageSlotFile(slotKey, filePath);
-      const slot = await storage.getImageSlot(slotKey);
+      await storage.updateImageSlotFile(slotKey as string, filePath);
+      const slot = await storage.getImageSlot(slotKey as string);
       if (!slot) {
-        await storage.upsertImageSlot(slotKey, filePath, "", "");
+        await storage.upsertImageSlot(slotKey as string, filePath, "", "");
       }
-      res.json({ filePath, slot: await storage.getImageSlot(slotKey) });
+      res.json({ filePath, slot: await storage.getImageSlot(slotKey as string) });
     } catch (error) {
       res.status(500).json({ message: "Failed to upload image" });
     }
@@ -189,6 +189,23 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete gallery image" });
+    }
+  });
+
+  app.post("/api/gallery/:id/replace", upload.single("image"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      const filePath = `/uploads/${req.file.filename}`;
+      await storage.deleteGalleryImage(id);
+      const existing = await storage.getAllGalleryImages();
+      const altText = typeof req.body.alt === "string" ? req.body.alt : "";
+      const image = await storage.addGalleryImage(filePath, altText, existing.length);
+      res.json(image);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to replace gallery image" });
     }
   });
 
@@ -261,11 +278,47 @@ export async function registerRoutes(
       const existingPassword = await storage.getAdminPassword();
       if (!existingPassword) {
         await storage.setAdminPassword("admin123");
-        res.json({ initialized: true });
-      } else {
-        res.json({ initialized: false, message: "Already initialized" });
       }
+
+      const existingGallery = await storage.getAllGalleryImages();
+      if (existingGallery.length === 0) {
+        const defaultImages = [
+          { src: "gallery-1.jpg", alt: "קליניקה" },
+          { src: "gallery-2.jpg", alt: "אווירה" },
+          { src: "hero.jpg", alt: "זוגיות" },
+        ];
+        const assetsDir = path.join(process.cwd(), "client", "src", "assets", "images");
+        for (let i = 0; i < defaultImages.length; i++) {
+          const srcFile = path.join(assetsDir, defaultImages[i].src);
+          if (fs.existsSync(srcFile)) {
+            const destName = `default-${Date.now()}-${i}${path.extname(defaultImages[i].src)}`;
+            const destFile = path.join(uploadDir, destName);
+            fs.copyFileSync(srcFile, destFile);
+            await storage.addGalleryImage(`/uploads/${destName}`, defaultImages[i].alt, i);
+          }
+        }
+      }
+
+      const existingSlots = await storage.getAllImageSlots();
+      if (existingSlots.length === 0) {
+        const assetsDir = path.join(process.cwd(), "client", "src", "assets", "images");
+        const heroSrc = path.join(assetsDir, "hero.jpg");
+        const benefitsSrc = path.join(assetsDir, "gallery-1.jpg");
+        if (fs.existsSync(heroSrc)) {
+          const heroName = `default-hero-${Date.now()}.jpg`;
+          fs.copyFileSync(heroSrc, path.join(uploadDir, heroName));
+          await storage.upsertImageSlot("HERO_BACKGROUND", `/uploads/${heroName}`, "רקע קליניקה נומרולוגיה", "16:9 (מומלץ 1920x1080)");
+        }
+        if (fs.existsSync(benefitsSrc)) {
+          const benefitsName = `default-benefits-${Date.now()}.jpg`;
+          fs.copyFileSync(benefitsSrc, path.join(uploadDir, benefitsName));
+          await storage.upsertImageSlot("BENEFITS_IMAGE", `/uploads/${benefitsName}`, "קליניקה ואווירה", "3:4 אופקי (מומלץ 800x1000)");
+        }
+      }
+
+      res.json({ initialized: true });
     } catch (error) {
+      console.error("Init error:", error);
       res.status(500).json({ message: "Failed to initialize" });
     }
   });
