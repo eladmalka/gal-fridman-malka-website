@@ -150,6 +150,7 @@ export default function Admin() {
   const [trashTargetId, setTrashTargetId] = useState<number | null>(null);
   const [showPermanentDeleteConfirm, setShowPermanentDeleteConfirm] = useState(false);
   const [permanentDeleteTargetId, setPermanentDeleteTargetId] = useState<number | null>(null);
+  const [showDeleteAllTrashConfirm, setShowDeleteAllTrashConfirm] = useState(false);
 
   const { data: trashedLeads, refetch: refetchTrash } = useQuery<Lead[]>({
     queryKey: ["/api/leads/trash"],
@@ -192,6 +193,16 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
       toast({ title: "הפנייה נמחקה לצמיתות" });
+    },
+  });
+
+  const deleteAllTrashMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", "/api/leads/trash/all");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
+      toast({ title: "כל הפניות בפח נמחקו לצמיתות" });
     },
   });
 
@@ -724,6 +735,14 @@ export default function Admin() {
               </CardHeader>
               {showTrash && (
                 <CardContent className="space-y-4">
+                  {trashedLeads && trashedLeads.length > 0 && (
+                    <div className="flex justify-end">
+                      <Button variant="destructive" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setShowDeleteAllTrashConfirm(true); }} data-testid="btn-delete-all-trash">
+                        <Trash2 size={14} />
+                        מחק הכל
+                      </Button>
+                    </div>
+                  )}
                   {!trashedLeads || trashedLeads.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Trash2 size={36} className="mx-auto mb-3 opacity-20" />
@@ -1135,6 +1154,20 @@ export default function Admin() {
               כן, החלף
             </AlertDialogAction>
             <AlertDialogCancel onClick={cleanupGalleryConfirm} data-testid="btn-cancel-replace">לא, בטל</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete all trash confirmation */}
+      <AlertDialog open={showDeleteAllTrashConfirm} onOpenChange={setShowDeleteAllTrashConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת כל הפניות בפח</AlertDialogTitle>
+            <AlertDialogDescription>פעולה זו בלתי הפיכה! כל הפניות שבפח האשפה יימחקו לצמיתות ולא ניתן יהיה לשחזר אותן.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={() => { deleteAllTrashMutation.mutate(); setShowDeleteAllTrashConfirm(false); }} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-delete-all-trash">כן, מחק הכל</AlertDialogAction>
+            <AlertDialogCancel data-testid="btn-cancel-delete-all-trash">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

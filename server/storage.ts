@@ -46,6 +46,8 @@ export interface IStorage {
   restoreLead(id: number): Promise<void>;
   getTrashedLeads(): Promise<Lead[]>;
   permanentDeleteLead(id: number): Promise<void>;
+  permanentDeleteAllTrash(): Promise<number>;
+  autoTrashOldLeads(): Promise<number>;
   cleanupOldTrash(): Promise<number>;
 
   getAdminPassword(): Promise<string | null>;
@@ -157,6 +159,25 @@ export class DatabaseStorage implements IStorage {
 
   async permanentDeleteLead(id: number): Promise<void> {
     await db.delete(leads).where(eq(leads.id, id));
+  }
+
+  async permanentDeleteAllTrash(): Promise<number> {
+    const trashed = await db.select({ id: leads.id }).from(leads).where(isNotNull(leads.deletedAt));
+    for (const row of trashed) {
+      await db.delete(leads).where(eq(leads.id, row.id));
+    }
+    return trashed.length;
+  }
+
+  async autoTrashOldLeads(): Promise<number> {
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    const old = await db.select({ id: leads.id }).from(leads).where(
+      sql`${leads.deletedAt} IS NULL AND ${leads.createdAt} < ${fourteenDaysAgo}`
+    );
+    for (const row of old) {
+      await db.update(leads).set({ deletedAt: new Date() }).where(eq(leads.id, row.id));
+    }
+    return old.length;
   }
 
   async cleanupOldTrash(): Promise<number> {

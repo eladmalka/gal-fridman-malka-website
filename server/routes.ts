@@ -308,6 +308,15 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/leads/trash/all", async (_req, res) => {
+    try {
+      const count = await storage.permanentDeleteAllTrash();
+      res.json({ success: true, count });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete all trash" });
+    }
+  });
+
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { password } = req.body;
@@ -380,6 +389,11 @@ export async function registerRoutes(
           fs.copyFileSync(benefitsSrc, path.join(uploadDir, benefitsName));
           await storage.upsertImageSlot("BENEFITS_IMAGE", `/uploads/${benefitsName}`, "קליניקה ואווירה", "3:4 אופקי (מומלץ 800x1000)");
         }
+      }
+
+      const autoTrashed = await storage.autoTrashOldLeads();
+      if (autoTrashed > 0) {
+        console.log(`Auto-trashed ${autoTrashed} leads older than 14 days`);
       }
 
       const cleaned = await storage.cleanupOldTrash();
