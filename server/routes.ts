@@ -227,7 +227,11 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.flatten() });
       }
       const lead = await storage.createLead(parsed.data);
-      await sendLeadEmail(parsed.data);
+      try {
+        await sendLeadEmail(parsed.data);
+      } catch (emailErr) {
+        console.error("Email sending failed (lead was saved):", emailErr);
+      }
       res.json({ success: true, lead });
     } catch (error) {
       res.status(500).json({ message: "Failed to submit lead" });
