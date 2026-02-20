@@ -33,6 +33,7 @@ export const leads = pgTable("leads", {
   email: text("email").notNull(),
   status: text("status").notNull(),
   goals: text("goals").notNull(),
+  seen: boolean("seen").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -42,7 +43,7 @@ export const adminSettings = pgTable("admin_settings", {
   value: text("value").notNull(),
 });
 
-export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, createdAt: true });
+export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, seen: true, createdAt: true });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;
 

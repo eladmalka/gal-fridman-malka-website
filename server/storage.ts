@@ -1,4 +1,4 @@
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import {
@@ -40,6 +40,8 @@ export interface IStorage {
 
   createLead(lead: InsertLead): Promise<Lead>;
   getAllLeads(): Promise<Lead[]>;
+  getUnseenLeadsCount(): Promise<number>;
+  markLeadsSeen(ids: number[]): Promise<void>;
 
   getAdminPassword(): Promise<string | null>;
   setAdminPassword(hashedPassword: string): Promise<void>;
@@ -122,7 +124,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllLeads(): Promise<Lead[]> {
-    return db.select().from(leads);
+    return db.select().from(leads).orderBy(desc(leads.createdAt));
+  }
+
+  async getUnseenLeadsCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(leads).where(eq(leads.seen, false));
+    return result[0]?.count ?? 0;
+  }
+
+  async markLeadsSeen(ids: number[]): Promise<void> {
+    for (const id of ids) {
+      await db.update(leads).set({ seen: true }).where(eq(leads.id, id));
+    }
   }
 
   async getAdminPassword(): Promise<string | null> {

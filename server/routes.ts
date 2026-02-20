@@ -247,6 +247,28 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/leads/unseen-count", async (_req, res) => {
+    try {
+      const count = await storage.getUnseenLeadsCount();
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get unseen count" });
+    }
+  });
+
+  app.post("/api/leads/mark-seen", async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).json({ message: "ids must be an array" });
+      }
+      await storage.markLeadsSeen(ids);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark leads as seen" });
+    }
+  });
+
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { password } = req.body;

@@ -5,14 +5,45 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ImagePlus, Trash2, GripVertical, LogOut, UploadCloud, Save } from "lucide-react";
+import { ImagePlus, Trash2, GripVertical, LogOut, UploadCloud, Save, Bell, BellRing, User, Phone, Mail, Target, Heart, Eye, X } from "lucide-react";
 import { useContent, useRefetchContent } from "@/lib/content-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Lead } from "@shared/schema";
 
 const MAX_GALLERY_IMAGES = 5;
+const POLL_INTERVAL = 15000;
+
+function playNotificationSound() {
+  try {
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(523, now);
+    osc1.frequency.setValueAtTime(659, now + 0.15);
+    osc1.frequency.setValueAtTime(784, now + 0.3);
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(523 * 2, now);
+    osc2.frequency.setValueAtTime(659 * 2, now + 0.15);
+    osc2.frequency.setValueAtTime(784 * 2, now + 0.3);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.6);
+    osc2.stop(now + 0.6);
+    setTimeout(() => ctx.close(), 1000);
+  } catch {}
+}
 
 export default function Admin() {
   const { content } = useContent();
@@ -50,6 +81,69 @@ export default function Admin() {
   const [localSlotAlts, setLocalSlotAlts] = useState<Record<string, string>>({});
   const [savedSlotAlts, setSavedSlotAlts] = useState<Record<string, string>>({});
   const [showSlotSaveConfirm, setShowSlotSaveConfirm] = useState(false);
+
+  const [showNewLeadPopup, setShowNewLeadPopup] = useState(false);
+  const [newLeadPopupData, setNewLeadPopupData] = useState<Lead | null>(null);
+  const lastKnownCountRef = useRef<number | null>(null);
+
+  const { data: leadsData, refetch: refetchLeads } = useQuery<Lead[]>({
+    queryKey: ["/api/leads"],
+    queryFn: async () => {
+      const res = await fetch("/api/leads");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    enabled: isLoggedIn,
+    refetchInterval: POLL_INTERVAL,
+  });
+
+  const { data: unseenData } = useQuery<{ count: number }>({
+    queryKey: ["/api/leads/unseen-count"],
+    queryFn: async () => {
+      const res = await fetch("/api/leads/unseen-count");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    enabled: isLoggedIn,
+    refetchInterval: POLL_INTERVAL,
+  });
+
+  const unseenCount = unseenData?.count ?? 0;
+
+  useEffect(() => {
+    if (lastKnownCountRef.current === null) {
+      lastKnownCountRef.current = unseenCount;
+      return;
+    }
+    if (unseenCount > lastKnownCountRef.current && leadsData && leadsData.length > 0) {
+      const newest = leadsData.find(l => !l.seen);
+      if (newest) {
+        setNewLeadPopupData(newest);
+        setShowNewLeadPopup(true);
+        playNotificationSound();
+      }
+    }
+    lastKnownCountRef.current = unseenCount;
+  }, [unseenCount, leadsData]);
+
+  const markSeenMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      await apiRequest("POST", "/api/leads/mark-seen", { ids });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/unseen-count"] });
+    },
+  });
+
+  const handleMarkAllSeen = () => {
+    if (leadsData) {
+      const unseenIds = leadsData.filter(l => !l.seen).map(l => l.id);
+      if (unseenIds.length > 0) {
+        markSeenMutation.mutate(unseenIds);
+      }
+    }
+  };
 
   useEffect(() => {
     const texts = {
@@ -425,13 +519,94 @@ export default function Admin() {
           </Button>
         </div>
 
-        <Tabs defaultValue="texts" className="w-full" dir="rtl">
-          <TabsList className="grid w-full grid-cols-4 h-14 bg-white shadow-sm border border-border/50">
+        <Tabs defaultValue="leads" className="w-full" dir="rtl">
+          <TabsList className="grid w-full grid-cols-5 h-14 bg-white shadow-sm border border-border/50">
+            <TabsTrigger value="leads" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary relative" data-testid="tab-leads">
+              פניות
+              {unseenCount > 0 && (
+                <Badge className="absolute -top-1 -left-1 h-5 min-w-5 flex items-center justify-center text-[10px] bg-red-500 text-white rounded-full px-1 animate-pulse">
+                  {unseenCount}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="texts" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">תוכן</TabsTrigger>
-            <TabsTrigger value="images" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">תמונות ראשיות</TabsTrigger>
+            <TabsTrigger value="images" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">תמונות</TabsTrigger>
             <TabsTrigger value="gallery" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">גלריה</TabsTrigger>
             <TabsTrigger value="settings" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary">הגדרות</TabsTrigger>
           </TabsList>
+
+          {/* === LEADS TAB === */}
+          <TabsContent value="leads" className="mt-6 space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bell size={20} />
+                      פניות מהאתר
+                    </CardTitle>
+                    <CardDescription>כל הפניות שהגיעו מטופס יצירת הקשר באתר.</CardDescription>
+                  </div>
+                  {unseenCount > 0 && (
+                    <Button variant="outline" size="sm" onClick={handleMarkAllSeen} disabled={markSeenMutation.isPending} className="gap-2" data-testid="btn-mark-all-seen">
+                      <Eye size={14} />
+                      סמן הכל כנקרא ({unseenCount})
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!leadsData || leadsData.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Mail size={48} className="mx-auto mb-4 opacity-30" />
+                    <p>אין פניות עדיין</p>
+                    <p className="text-sm mt-1">פניות חדשות מטופס האתר יופיעו כאן</p>
+                  </div>
+                ) : (
+                  leadsData.map((lead) => (
+                    <Card key={lead.id} className={`p-5 transition-all ${!lead.seen ? "border-primary/40 bg-primary/5 shadow-md" : "bg-white border-border/50"}`} data-testid={`card-lead-${lead.id}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-grow space-y-3">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <h3 className="font-bold text-lg">{lead.name}</h3>
+                            {!lead.seen && (
+                              <Badge className="bg-primary text-white text-[10px] px-2 py-0.5">חדש</Badge>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Phone size={14} className="shrink-0" />
+                              <a href={`tel:${lead.phone}`} className="hover:text-primary transition-colors" dir="ltr">{lead.phone}</a>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Mail size={14} className="shrink-0" />
+                              <a href={`mailto:${lead.email}`} className="hover:text-primary transition-colors">{lead.email}</a>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Heart size={14} className="shrink-0" />
+                              <span>{lead.status}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Target size={14} className="shrink-0" />
+                              <span>{lead.goals}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {!lead.seen && (
+                          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-primary" onClick={() => markSeenMutation.mutate([lead.id])} data-testid={`btn-mark-seen-${lead.id}`}>
+                            <Eye size={18} />
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* === TEXTS TAB === */}
           <TabsContent value="texts" className="mt-6 space-y-6">
@@ -806,6 +981,46 @@ export default function Admin() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* New Lead Notification Popup */}
+      {showNewLeadPopup && newLeadPopupData && (
+        <div className="fixed bottom-6 left-6 z-50 animate-in slide-in-from-bottom-4 duration-500" dir="rtl" data-testid="popup-new-lead">
+          <Card className="w-80 border-primary/30 shadow-xl bg-white overflow-hidden">
+            <div className="bg-primary/10 px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <BellRing size={18} className="animate-bounce" />
+                פנייה חדשה!
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowNewLeadPopup(false)} data-testid="btn-close-popup">
+                <X size={14} />
+              </Button>
+            </div>
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <User size={14} className="text-muted-foreground shrink-0" />
+                <span className="font-medium">{newLeadPopupData.name}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone size={14} className="shrink-0" />
+                <span dir="ltr">{newLeadPopupData.phone}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail size={14} className="shrink-0" />
+                <span>{newLeadPopupData.email}</span>
+              </div>
+              <div className="pt-2 flex gap-2">
+                <Button size="sm" className="flex-1 gap-1" onClick={() => { setShowNewLeadPopup(false); markSeenMutation.mutate([newLeadPopupData.id]); }} data-testid="btn-popup-seen">
+                  <Eye size={14} />
+                  סמן כנקרא
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => setShowNewLeadPopup(false)} data-testid="btn-popup-dismiss">
+                  סגור
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
