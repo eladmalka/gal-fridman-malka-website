@@ -1196,12 +1196,12 @@ export default function Admin() {
 
       {/* Save text confirmation */}
       <AlertDialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>שמירת שינויים</AlertDialogTitle>
-            <AlertDialogDescription>האם את בטוחה שאת רוצה לשמור את השינויים?</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">שמירת שינויים</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם את בטוחה שאת רוצה לשמור את השינויים?</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmSaveTexts} data-testid="btn-confirm-save">כן, שמור</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-save">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1210,12 +1210,12 @@ export default function Admin() {
 
       {/* Save gallery alts confirmation */}
       <AlertDialog open={showGallerySaveConfirm} onOpenChange={setShowGallerySaveConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>שמירת שינויים</AlertDialogTitle>
-            <AlertDialogDescription>האם את בטוחה שאת רוצה לשמור את השינויים בתיאורי הגלריה?</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">שמירת שינויים</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם את בטוחה שאת רוצה לשמור את השינויים בתיאורי הגלריה?</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmSaveGalleryAlts} data-testid="btn-confirm-gallery-save">כן, שמור</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-gallery-save">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1224,12 +1224,12 @@ export default function Admin() {
 
       {/* Save slot alts confirmation */}
       <AlertDialog open={showSlotSaveConfirm} onOpenChange={setShowSlotSaveConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>שמירת שינויים</AlertDialogTitle>
-            <AlertDialogDescription>האם את בטוחה שאת רוצה לשמור את השינויים בתיאורי התמונות?</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">שמירת שינויים</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם את בטוחה שאת רוצה לשמור את השינויים בתיאורי התמונות?</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmSaveSlotAlts} data-testid="btn-confirm-slot-save">כן, שמור</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-slot-save">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1238,12 +1238,12 @@ export default function Admin() {
 
       {/* Gallery image delete confirmation */}
       <AlertDialog open={showGalleryDeleteConfirm} onOpenChange={setShowGalleryDeleteConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>מחיקת תמונה מהגלריה</AlertDialogTitle>
-            <AlertDialogDescription>האם את בטוחה שאת רוצה למחוק את התמונה הזו מהגלריה? פעולה זו בלתי הפיכה.</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">מחיקת תמונה מהגלריה</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם את בטוחה שאת רוצה למחוק את התמונה הזו מהגלריה? פעולה זו בלתי הפיכה.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={() => { if (galleryDeleteTargetId !== null) galleryDeleteMutation.mutate(galleryDeleteTargetId); setShowGalleryDeleteConfirm(false); setGalleryDeleteTargetId(null); }} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-gallery-delete">כן, מחק</AlertDialogAction>
             <AlertDialogCancel onClick={() => setGalleryDeleteTargetId(null)} data-testid="btn-cancel-gallery-delete">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1252,12 +1252,12 @@ export default function Admin() {
 
       {/* Save gallery order confirmation */}
       <AlertDialog open={showReorderSaveConfirm} onOpenChange={setShowReorderSaveConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>שמירת סדר הגלריה</AlertDialogTitle>
-            <AlertDialogDescription>האם את בטוחה שאת רוצה לשמור את הסדר החדש של תמונות הגלריה?</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">שמירת סדר הגלריה</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם את בטוחה שאת רוצה לשמור את הסדר החדש של תמונות הגלריה?</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmSaveGalleryOrder} data-testid="btn-confirm-reorder-save">כן, שמור</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-reorder-save">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1266,12 +1266,12 @@ export default function Admin() {
 
       {/* Cancel gallery order confirmation */}
       <AlertDialog open={showReorderCancelConfirm} onOpenChange={setShowReorderCancelConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>ביטול שינויי סדר</AlertDialogTitle>
-            <AlertDialogDescription>כל השינויים בסדר התמונות יבוטלו והסדר יחזור למצב השמור. להמשיך?</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">ביטול שינויי סדר</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">כל השינויים בסדר התמונות יבוטלו והסדר יחזור למצב השמור. להמשיך?</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmCancelGalleryOrder} data-testid="btn-confirm-reorder-cancel">כן, בטל שינויים</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-reorder-cancel">לא, השאר</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1280,10 +1280,10 @@ export default function Admin() {
 
       {/* Image slot replace confirmation */}
       <AlertDialog open={showImageConfirm} onOpenChange={(open) => { if (!open) cleanupImageConfirm(); }}>
-        <AlertDialogContent dir="rtl" className="max-w-md">
+        <AlertDialogContent dir="rtl" className="max-w-md text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>החלפת תמונה</AlertDialogTitle>
-            <AlertDialogDescription>האם ברצונך להחליף את התמונה הנוכחית בתמונה החדשה?</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">החלפת תמונה</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם ברצונך להחליף את התמונה הנוכחית בתמונה החדשה?</AlertDialogDescription>
           </AlertDialogHeader>
           {pendingImagePreview && (
             <div className="flex justify-center my-4">
@@ -1292,7 +1292,7 @@ export default function Admin() {
               </div>
             </div>
           )}
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmImageUpload} data-testid="btn-confirm-image">כן, החלף</AlertDialogAction>
             <AlertDialogCancel onClick={cleanupImageConfirm} data-testid="btn-cancel-image">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1301,10 +1301,10 @@ export default function Admin() {
 
       {/* Gallery add confirmation (under limit) */}
       <AlertDialog open={showGalleryConfirm} onOpenChange={(open) => { if (!open) cleanupGalleryConfirm(); }}>
-        <AlertDialogContent dir="rtl" className="max-w-md">
+        <AlertDialogContent dir="rtl" className="max-w-md text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>הוספת תמונה לגלריה</AlertDialogTitle>
-            <AlertDialogDescription>האם ברצונך להוסיף את התמונה הזו לגלריה?</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">הוספת תמונה לגלריה</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם ברצונך להוסיף את התמונה הזו לגלריה?</AlertDialogDescription>
           </AlertDialogHeader>
           {pendingGalleryPreview && (
             <div className="flex justify-center my-4">
@@ -1313,7 +1313,7 @@ export default function Admin() {
               </div>
             </div>
           )}
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmGalleryUpload} data-testid="btn-confirm-gallery">כן, הוסף</AlertDialogAction>
             <AlertDialogCancel onClick={cleanupGalleryConfirm} data-testid="btn-cancel-gallery">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1322,9 +1322,9 @@ export default function Admin() {
 
       {/* Gallery replace picker (at limit) */}
       <AlertDialog open={showGalleryReplaceDialog} onOpenChange={(open) => { if (!open) cleanupGalleryConfirm(); }}>
-        <AlertDialogContent dir="rtl" className="max-w-lg">
+        <AlertDialogContent dir="rtl" className="max-w-lg text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>הגלריה מלאה - בחרי תמונה להחלפה</AlertDialogTitle>
+            <AlertDialogTitle className="text-center">הגלריה מלאה - בחרי תמונה להחלפה</AlertDialogTitle>
             <AlertDialogDescription>
               יש כבר {MAX_GALLERY_IMAGES} תמונות בגלריה. בחרי איזו תמונה להחליף בתמונה החדשה:
             </AlertDialogDescription>
@@ -1357,7 +1357,7 @@ export default function Admin() {
               </button>
             ))}
           </div>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmGalleryReplace} disabled={replaceTargetId === null} data-testid="btn-confirm-replace">
               כן, החלף
             </AlertDialogAction>
@@ -1368,12 +1368,12 @@ export default function Admin() {
 
       {/* Delete all trash confirmation */}
       <AlertDialog open={showDeleteAllTrashConfirm} onOpenChange={setShowDeleteAllTrashConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>מחיקת כל הפניות בסל המחזור</AlertDialogTitle>
-            <AlertDialogDescription>פעולה זו בלתי הפיכה! כל הפניות שבסל המחזור יימחקו לצמיתות ולא ניתן יהיה לשחזר אותן.</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">מחיקת כל הפניות בסל המחזור</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">פעולה זו בלתי הפיכה! כל הפניות שבסל המחזור יימחקו לצמיתות ולא ניתן יהיה לשחזר אותן.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={() => { deleteAllTrashMutation.mutate(); setShowDeleteAllTrashConfirm(false); }} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-delete-all-trash">כן, מחק הכל</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-delete-all-trash">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1382,12 +1382,12 @@ export default function Admin() {
 
       {/* Trash lead confirmation */}
       <AlertDialog open={showTrashConfirm} onOpenChange={setShowTrashConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>העברה לסל מחזור</AlertDialogTitle>
-            <AlertDialogDescription>האם את בטוחה שאת רוצה להעביר את הפנייה הזו לסל המחזור? ניתן לשחזר אותה תוך 30 יום.</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">העברה לסל מחזור</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">האם את בטוחה שאת רוצה להעביר את הפנייה הזו לסל המחזור? ניתן לשחזר אותה תוך 30 יום.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmTrashLead} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-trash">כן, העבר לסל</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-trash">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1396,12 +1396,12 @@ export default function Admin() {
 
       {/* Permanent delete confirmation */}
       <AlertDialog open={showPermanentDeleteConfirm} onOpenChange={setShowPermanentDeleteConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>מחיקה לצמיתות</AlertDialogTitle>
-            <AlertDialogDescription>פעולה זו בלתי הפיכה! הפנייה תימחק לצמיתות ולא ניתן יהיה לשחזר אותה.</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">מחיקה לצמיתות</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">פעולה זו בלתי הפיכה! הפנייה תימחק לצמיתות ולא ניתן יהיה לשחזר אותה.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={confirmPermanentDelete} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-perm-delete">כן, מחק לצמיתות</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-perm-delete">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
@@ -1410,12 +1410,12 @@ export default function Admin() {
 
       {/* Restore all trash confirmation */}
       <AlertDialog open={showRestoreAllTrashConfirm} onOpenChange={setShowRestoreAllTrashConfirm}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle>שחזור כל הפניות</AlertDialogTitle>
-            <AlertDialogDescription>כל הפניות שבסל המחזור יוחזרו לרשימת הפניות הפעילות.</AlertDialogDescription>
+            <AlertDialogTitle className="text-center">שחזור כל הפניות</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">כל הפניות שבסל המחזור יוחזרו לרשימת הפניות הפעילות.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
             <AlertDialogAction onClick={() => { restoreAllTrashMutation.mutate(); setShowRestoreAllTrashConfirm(false); }} data-testid="btn-confirm-restore-all-trash">כן, שחזר הכל</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-restore-all-trash">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
