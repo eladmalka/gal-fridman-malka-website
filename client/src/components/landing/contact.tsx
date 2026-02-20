@@ -136,7 +136,7 @@ export function Contact() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent dir="rtl">
-                        <SelectItem value="married">נשואים</SelectItem>
+                        <SelectItem value="married">נשואה</SelectItem>
                         <SelectItem value="relationship">בזוגיות</SelectItem>
                         <SelectItem value="single">רווקה</SelectItem>
                         <SelectItem value="other">אחר</SelectItem>
