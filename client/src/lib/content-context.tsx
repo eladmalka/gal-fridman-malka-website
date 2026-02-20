@@ -49,10 +49,10 @@ const defaultContent: ContentState = {
     description: "שילוב ייחודי של אבחון נומרולוגי עמוק עם כלים פרקטיים מעולם האימון הזוגי, ליצירת תקשורת טובה יותר, הבנה וחיבור אמיתי.",
   },
   trust: {
-    testimonialsTitle: "מה מספרים עלינו",
+    testimonialsTitle: "מה מספרים עליי",
   },
   services: {
-    title: "איך נוכל לעבוד יחד?",
+    title: "איך נוכל לעבוד ביחד?",
     description: "תהליכים מדויקים המשלבים עומק רוחני ופרקטיקה יומיומית",
   },
   benefits: {

@@ -171,7 +171,7 @@ export function Contact() {
                 name="contactMethod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>איך תרצה שניצור איתך קשר?</FormLabel>
+                    <FormLabel>איך תרצי שאצור איתך קשר?</FormLabel>
                     <FormControl>
                       <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-6 pt-2" dir="rtl">
                         <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export function Contact() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl">איזה כיף!</AlertDialogTitle>
             <AlertDialogDescription className="text-base mt-2">
-              הפניה נשלחה בהצלחה נחזור אליך בהקדם
+              הפניה נשלחה בהצלחה אחזור אליך בהקדם
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="justify-center sm:justify-center">
