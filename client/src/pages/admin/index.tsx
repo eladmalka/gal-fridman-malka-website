@@ -1418,7 +1418,7 @@ export default function Admin() {
 
       {/* New Lead Notification Popup */}
       {showNewLeadPopup && newLeadPopupData && (
-        <div className="fixed bottom-6 left-6 z-50 animate-in slide-in-from-bottom-4 duration-500" dir="rtl" data-testid="popup-new-lead">
+        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-4 duration-500" dir="rtl" data-testid="popup-new-lead">
           <Card className="w-80 border-primary/30 shadow-xl bg-white overflow-hidden">
             <div className="bg-primary/10 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2 text-primary font-bold">

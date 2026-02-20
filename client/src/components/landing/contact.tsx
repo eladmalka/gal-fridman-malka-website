@@ -227,9 +227,11 @@ export function Contact() {
       <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
         <AlertDialogContent dir="rtl" className="max-w-md text-center">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl">איזה כיף!</AlertDialogTitle>
-            <AlertDialogDescription className="text-base mt-2">
-              הפניה נשלחה בהצלחה אחזור אליך בהקדם
+            <AlertDialogTitle className="text-2xl text-center">איזה כיף!</AlertDialogTitle>
+            <AlertDialogDescription className="text-base mt-2 text-center">
+              הפניה נשלחה בהצלחה
+              <br />
+              אחזור אליך בהקדם :-)
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="justify-center sm:justify-center">
