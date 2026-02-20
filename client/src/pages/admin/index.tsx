@@ -25,6 +25,13 @@ export default function Admin() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null);
+  const [pendingImageSlotKey, setPendingImageSlotKey] = useState<string | null>(null);
+  const [showImageConfirm, setShowImageConfirm] = useState(false);
+  const [pendingGalleryFile, setPendingGalleryFile] = useState<File | null>(null);
+  const [pendingGalleryPreview, setPendingGalleryPreview] = useState<string | null>(null);
+  const [showGalleryConfirm, setShowGalleryConfirm] = useState(false);
 
   const [localTexts, setLocalTexts] = useState<Record<string, string>>({});
   const [savedTexts, setSavedTexts] = useState<Record<string, string>>({});
@@ -151,9 +158,27 @@ export default function Admin() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activeSlot) {
-      imageSlotUploadMutation.mutate({ slotKey: activeSlot, file });
+      setPendingImageFile(file);
+      setPendingImageSlotKey(activeSlot);
+      setPendingImagePreview(URL.createObjectURL(file));
+      setShowImageConfirm(true);
     }
     if (e.target) e.target.value = "";
+  };
+
+  const confirmImageUpload = () => {
+    if (pendingImageFile && pendingImageSlotKey) {
+      imageSlotUploadMutation.mutate({ slotKey: pendingImageSlotKey, file: pendingImageFile });
+    }
+    cleanupImageConfirm();
+  };
+
+  const cleanupImageConfirm = () => {
+    setShowImageConfirm(false);
+    if (pendingImagePreview) URL.revokeObjectURL(pendingImagePreview);
+    setPendingImageFile(null);
+    setPendingImagePreview(null);
+    setPendingImageSlotKey(null);
   };
 
   const galleryUploadMutation = useMutation({
@@ -180,9 +205,25 @@ export default function Admin() {
   const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      galleryUploadMutation.mutate(file);
+      setPendingGalleryFile(file);
+      setPendingGalleryPreview(URL.createObjectURL(file));
+      setShowGalleryConfirm(true);
     }
     if (e.target) e.target.value = "";
+  };
+
+  const confirmGalleryUpload = () => {
+    if (pendingGalleryFile) {
+      galleryUploadMutation.mutate(pendingGalleryFile);
+    }
+    cleanupGalleryConfirm();
+  };
+
+  const cleanupGalleryConfirm = () => {
+    setShowGalleryConfirm(false);
+    if (pendingGalleryPreview) URL.revokeObjectURL(pendingGalleryPreview);
+    setPendingGalleryFile(null);
+    setPendingGalleryPreview(null);
   };
 
   const galleryDeleteMutation = useMutation({
@@ -571,6 +612,58 @@ export default function Admin() {
               כן, שמור
             </AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-save">
+              לא, בטל
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showImageConfirm} onOpenChange={(open) => { if (!open) cleanupImageConfirm(); }}>
+        <AlertDialogContent dir="rtl" className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>החלפת תמונה</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם ברצונך להחליף את התמונה הנוכחית בתמונה החדשה?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {pendingImagePreview && (
+            <div className="flex justify-center my-4">
+              <div className="w-48 h-48 rounded-lg overflow-hidden border border-border shadow-sm">
+                <img src={pendingImagePreview} alt="תצוגה מקדימה" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={confirmImageUpload} data-testid="btn-confirm-image">
+              כן, החלף
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={cleanupImageConfirm} data-testid="btn-cancel-image">
+              לא, בטל
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showGalleryConfirm} onOpenChange={(open) => { if (!open) cleanupGalleryConfirm(); }}>
+        <AlertDialogContent dir="rtl" className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>הוספת תמונה לגלריה</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם ברצונך להוסיף את התמונה הזו לגלריה?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {pendingGalleryPreview && (
+            <div className="flex justify-center my-4">
+              <div className="w-48 h-48 rounded-lg overflow-hidden border border-border shadow-sm">
+                <img src={pendingGalleryPreview} alt="תצוגה מקדימה" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={confirmGalleryUpload} data-testid="btn-confirm-gallery">
+              כן, הוסף
+            </AlertDialogAction>
+            <AlertDialogCancel onClick={cleanupGalleryConfirm} data-testid="btn-cancel-gallery">
               לא, בטל
             </AlertDialogCancel>
           </AlertDialogFooter>
