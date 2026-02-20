@@ -69,6 +69,8 @@ export default function Admin() {
   const [showGalleryConfirm, setShowGalleryConfirm] = useState(false);
   const [showGalleryReplaceDialog, setShowGalleryReplaceDialog] = useState(false);
   const [replaceTargetId, setReplaceTargetId] = useState<number | null>(null);
+  const [showGalleryDeleteConfirm, setShowGalleryDeleteConfirm] = useState(false);
+  const [galleryDeleteTargetId, setGalleryDeleteTargetId] = useState<number | null>(null);
 
   const [localTexts, setLocalTexts] = useState<Record<string, string>>({});
   const [savedTexts, setSavedTexts] = useState<Record<string, string>>({});
@@ -1146,7 +1148,7 @@ export default function Admin() {
                         className="w-full bg-transparent"
                       />
                     </div>
-                    <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive self-end sm:self-auto" size="icon" onClick={() => galleryDeleteMutation.mutate(img.id)} data-testid={`btn-delete-img-${img.id}`}>
+                    <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive self-end sm:self-auto" size="icon" onClick={() => { setGalleryDeleteTargetId(img.id); setShowGalleryDeleteConfirm(true); }} data-testid={`btn-delete-img-${img.id}`}>
                       <Trash2 size={18} />
                     </Button>
                   </Card>
@@ -1224,6 +1226,20 @@ export default function Admin() {
           <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
             <AlertDialogAction onClick={confirmSaveSlotAlts} data-testid="btn-confirm-slot-save">כן, שמור</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-slot-save">לא, בטל</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Gallery image delete confirmation */}
+      <AlertDialog open={showGalleryDeleteConfirm} onOpenChange={setShowGalleryDeleteConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת תמונה מהגלריה</AlertDialogTitle>
+            <AlertDialogDescription>האם את בטוחה שאת רוצה למחוק את התמונה הזו מהגלריה? פעולה זו בלתי הפיכה.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={() => { if (galleryDeleteTargetId !== null) galleryDeleteMutation.mutate(galleryDeleteTargetId); setShowGalleryDeleteConfirm(false); setGalleryDeleteTargetId(null); }} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-gallery-delete">כן, מחק</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setGalleryDeleteTargetId(null)} data-testid="btn-cancel-gallery-delete">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
