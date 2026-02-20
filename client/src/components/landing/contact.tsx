@@ -1,12 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useContent } from "@/lib/content-context";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,6 +28,7 @@ const formSchema = z.object({
 export function Contact() {
   const { toast } = useToast();
   const { content } = useContent();
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,10 +47,7 @@ export function Contact() {
       await apiRequest("POST", "/api/leads", data);
     },
     onSuccess: () => {
-      toast({
-        title: "הפנייה נשלחה בהצלחה!",
-        description: "נחזור אליך בהקדם.",
-      });
+      setShowSuccess(true);
       form.reset();
     },
     onError: () => {
@@ -195,6 +195,20 @@ export function Contact() {
           </Form>
         </div>
       </div>
+
+      <AlertDialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <AlertDialogContent dir="rtl" className="max-w-md text-center">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl">איזה כיף!</AlertDialogTitle>
+            <AlertDialogDescription className="text-base mt-2">
+              הפניה נשלחה בהצלחה נחזור אליך בהקדם
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center">
+            <AlertDialogAction onClick={() => setShowSuccess(false)} data-testid="btn-close-success">סגור</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
