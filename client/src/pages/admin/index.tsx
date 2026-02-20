@@ -154,6 +154,9 @@ export default function Admin() {
   const [showRestoreAllTrashConfirm, setShowRestoreAllTrashConfirm] = useState(false);
   const [draggedGalleryId, setDraggedGalleryId] = useState<number | null>(null);
   const [dragOverGalleryId, setDragOverGalleryId] = useState<number | null>(null);
+  const [localGalleryOrder, setLocalGalleryOrder] = useState<typeof content.gallery.images | null>(null);
+  const [showReorderSaveConfirm, setShowReorderSaveConfirm] = useState(false);
+  const [showReorderCancelConfirm, setShowReorderCancelConfirm] = useState(false);
 
   const { data: trashedLeads, refetch: refetchTrash } = useQuery<Lead[]>({
     queryKey: ["/api/leads/trash"],
@@ -226,10 +229,16 @@ export default function Admin() {
       await apiRequest("POST", "/api/gallery/reorder", { ids });
     },
     onSuccess: () => {
+      setLocalGalleryOrder(null);
       refetchContent();
       toast({ title: "סדר התמונות עודכן" });
     },
   });
+
+  const displayGalleryImages = localGalleryOrder ?? content.gallery.images;
+
+  const hasGalleryOrderChanges = localGalleryOrder !== null &&
+    JSON.stringify(localGalleryOrder.map(i => i.id)) !== JSON.stringify(content.gallery.images.map(i => i.id));
 
   const handleGalleryDragStart = (id: number) => {
     setDraggedGalleryId(id);
@@ -246,16 +255,36 @@ export default function Admin() {
       setDragOverGalleryId(null);
       return;
     }
-    const images = [...content.gallery.images];
+    const images = [...(localGalleryOrder ?? content.gallery.images)];
     const dragIndex = images.findIndex(img => img.id === draggedGalleryId);
     const targetIndex = images.findIndex(img => img.id === targetId);
     if (dragIndex === -1 || targetIndex === -1) return;
     const [moved] = images.splice(dragIndex, 1);
     images.splice(targetIndex, 0, moved);
-    const newIds = images.map(img => img.id);
-    galleryReorderMutation.mutate(newIds);
+    setLocalGalleryOrder(images);
     setDraggedGalleryId(null);
     setDragOverGalleryId(null);
+  };
+
+  const handleSaveGalleryOrder = () => {
+    setShowReorderSaveConfirm(true);
+  };
+
+  const confirmSaveGalleryOrder = () => {
+    if (localGalleryOrder) {
+      galleryReorderMutation.mutate(localGalleryOrder.map(img => img.id));
+    }
+    setShowReorderSaveConfirm(false);
+  };
+
+  const handleCancelGalleryOrder = () => {
+    setShowReorderCancelConfirm(true);
+  };
+
+  const confirmCancelGalleryOrder = () => {
+    setLocalGalleryOrder(null);
+    setShowReorderCancelConfirm(false);
+    toast({ title: "השינויים בוטלו - הסדר חזר למצב השמור" });
   };
 
   const handleTrashLead = (id: number) => {
@@ -534,6 +563,7 @@ export default function Admin() {
       return res.json();
     },
     onSuccess: () => {
+      setLocalGalleryOrder(null);
       refetchContent();
       toast({ title: "התמונה נוספה לגלריה בהצלחה" });
     },
@@ -555,6 +585,7 @@ export default function Admin() {
       return res.json();
     },
     onSuccess: () => {
+      setLocalGalleryOrder(null);
       refetchContent();
       toast({ title: "התמונה הוחלפה בהצלחה" });
     },
@@ -605,6 +636,7 @@ export default function Admin() {
       await apiRequest("DELETE", `/api/gallery/${id}`);
     },
     onSuccess: () => {
+      setLocalGalleryOrder(null);
       refetchContent();
       toast({ title: "התמונה נמחקה בהצלחה" });
     },
@@ -1060,19 +1092,38 @@ export default function Admin() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <h2 className="text-xl font-bold font-heading">תמונות קיימות בגלריה ({content.gallery.images.length}/{MAX_GALLERY_IMAGES})</h2>
-                  <Button onClick={handleSaveGalleryAlts} disabled={!hasGalleryAltChanges || galleryAltSaveMutation.isPending} className="gap-2 shrink-0" data-testid="btn-save-gallery">
-                    <Save size={16} />
-                    {galleryAltSaveMutation.isPending ? "שומר..." : "שמור שינויים"}
-                  </Button>
+                  <div className="flex gap-2 shrink-0">
+                    {hasGalleryOrderChanges && (
+                      <>
+                        <Button onClick={handleCancelGalleryOrder} variant="outline" className="gap-2" data-testid="btn-cancel-reorder">
+                          <X size={16} />
+                          בטל שינויי סדר
+                        </Button>
+                        <Button onClick={handleSaveGalleryOrder} disabled={galleryReorderMutation.isPending} className="gap-2" data-testid="btn-save-reorder">
+                          <Save size={16} />
+                          {galleryReorderMutation.isPending ? "שומר..." : "שמור סדר"}
+                        </Button>
+                      </>
+                    )}
+                    <Button onClick={handleSaveGalleryAlts} disabled={!hasGalleryAltChanges || galleryAltSaveMutation.isPending} className="gap-2" data-testid="btn-save-gallery">
+                      <Save size={16} />
+                      {galleryAltSaveMutation.isPending ? "שומר..." : "שמור תיאורים"}
+                    </Button>
+                  </div>
                 </div>
+                {hasGalleryOrderChanges && (
+                  <div className="mt-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+                    שינית את סדר התמונות — לחצי על "שמור סדר" לשמירה, או "בטל שינויי סדר" כדי לחזור למצב הקודם.
+                  </div>
+                )}
                 {hasGalleryAltChanges && (
                   <div className="mt-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                    יש שינויים בתיאורים שלא נשמרו - לחצי על "שמור שינויים" לשמירה.
+                    יש שינויים בתיאורים שלא נשמרו - לחצי על "שמור תיאורים" לשמירה.
                   </div>
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                {content.gallery.images.map((img) => (
+                {displayGalleryImages.map((img) => (
                   <Card
                     key={img.id}
                     className={`p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white transition-all ${dragOverGalleryId === img.id ? "ring-2 ring-primary/50 bg-primary/5" : ""} ${draggedGalleryId === img.id ? "opacity-50" : ""}`}
@@ -1173,6 +1224,34 @@ export default function Admin() {
           <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
             <AlertDialogAction onClick={confirmSaveSlotAlts} data-testid="btn-confirm-slot-save">כן, שמור</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-slot-save">לא, בטל</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Save gallery order confirmation */}
+      <AlertDialog open={showReorderSaveConfirm} onOpenChange={setShowReorderSaveConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>שמירת סדר הגלריה</AlertDialogTitle>
+            <AlertDialogDescription>האם את בטוחה שאת רוצה לשמור את הסדר החדש של תמונות הגלריה?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={confirmSaveGalleryOrder} data-testid="btn-confirm-reorder-save">כן, שמור</AlertDialogAction>
+            <AlertDialogCancel data-testid="btn-cancel-reorder-save">לא, בטל</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel gallery order confirmation */}
+      <AlertDialog open={showReorderCancelConfirm} onOpenChange={setShowReorderCancelConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>ביטול שינויי סדר</AlertDialogTitle>
+            <AlertDialogDescription>כל השינויים בסדר התמונות יבוטלו והסדר יחזור למצב השמור. להמשיך?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={confirmCancelGalleryOrder} data-testid="btn-confirm-reorder-cancel">כן, בטל שינויים</AlertDialogAction>
+            <AlertDialogCancel data-testid="btn-cancel-reorder-cancel">לא, השאר</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
