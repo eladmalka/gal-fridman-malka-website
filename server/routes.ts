@@ -199,10 +199,11 @@ export async function registerRoutes(
         return res.status(400).json({ message: "No file uploaded" });
       }
       const filePath = `/uploads/${req.file.filename}`;
+      const oldImage = (await storage.getAllGalleryImages()).find(g => g.id === id);
+      const preservedOrder = oldImage?.sortOrder ?? 0;
       await storage.deleteGalleryImage(id);
-      const existing = await storage.getAllGalleryImages();
       const altText = typeof req.body.alt === "string" ? req.body.alt : "";
-      const image = await storage.addGalleryImage(filePath, altText, existing.length);
+      const image = await storage.addGalleryImage(filePath, altText, preservedOrder);
       res.json(image);
     } catch (error) {
       res.status(500).json({ message: "Failed to replace gallery image" });
