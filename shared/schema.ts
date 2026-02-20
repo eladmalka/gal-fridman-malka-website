@@ -33,6 +33,7 @@ export const leads = pgTable("leads", {
   email: text("email").notNull(),
   status: text("status").notNull(),
   goals: text("goals").notNull(),
+  contactMethod: text("contact_method").notNull().default("phone"),
   seen: boolean("seen").notNull().default(false),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -50,6 +51,7 @@ export const insertLeadSchema = createInsertSchema(leads, {
   email: z.string().min(1).email({ message: "כתובת אימייל לא תקינה" }),
   status: z.string().min(1, { message: "נא לבחור סטטוס זוגי" }),
   goals: z.string().min(5, { message: "נא לפרט מה תרצו לשפר" }),
+  contactMethod: z.enum(["phone", "whatsapp"], { required_error: "נא לבחור אופן יצירת קשר" }),
 }).omit({ id: true, seen: true, deletedAt: true, createdAt: true });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;

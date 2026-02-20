@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ImagePlus, Trash2, GripVertical, LogOut, UploadCloud, Save, Bell, BellRing, User, Phone, Mail, Target, Heart, Eye, X } from "lucide-react";
+import { ImagePlus, Trash2, GripVertical, LogOut, UploadCloud, Save, Bell, BellRing, User, Phone, Mail, Target, Heart, Eye, X, MessageCircle } from "lucide-react";
 import { useContent, useRefetchContent } from "@/lib/content-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -682,6 +682,10 @@ export default function Admin() {
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Target size={14} className="shrink-0" />
                               <span>{lead.goals}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <MessageCircle size={14} className="shrink-0" />
+                              <span>{lead.contactMethod === "whatsapp" ? "הודעת וואטסאפ" : "שיחת טלפון"}</span>
                             </div>
                           </div>
                         </div>

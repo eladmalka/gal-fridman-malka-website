@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useContent } from "@/lib/content-context";
@@ -20,6 +22,7 @@ const formSchema = z.object({
   email: z.string().min(1, { message: "אימייל הוא שדה חובה" }).email({ message: "כתובת אימייל לא תקינה" }),
   status: z.string({ required_error: "נא לבחור סטטוס זוגי" }).min(1, { message: "נא לבחור סטטוס זוגי" }),
   goals: z.string().min(5, { message: "נא לפרט מה תרצו לשפר (לפחות 5 תווים)" }),
+  contactMethod: z.enum(["phone", "whatsapp"], { required_error: "נא לבחור אופן יצירת קשר" }),
   agree: z.boolean().refine(val => val === true, {
     message: "חובה לאשר יצירת קשר",
   }),
@@ -37,6 +40,7 @@ export function Contact() {
       phone: "",
       email: "",
       goals: "",
+      contactMethod: undefined as unknown as "phone" | "whatsapp",
       agree: false,
     },
   });
@@ -156,6 +160,29 @@ export function Contact() {
                         {...field} 
                         data-testid="textarea-goals"
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contactMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>איך תרצה שניצור איתך קשר?</FormLabel>
+                    <FormControl>
+                      <RadioGroup onValueChange={field.onChange} value={field.value} className="flex gap-6 pt-2" dir="rtl">
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="phone" id="contact-phone" data-testid="radio-phone" />
+                          <Label htmlFor="contact-phone" className="cursor-pointer">שיחת טלפון</Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="whatsapp" id="contact-whatsapp" data-testid="radio-whatsapp" />
+                          <Label htmlFor="contact-whatsapp" className="cursor-pointer">הודעת וואטסאפ</Label>
+                        </div>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
