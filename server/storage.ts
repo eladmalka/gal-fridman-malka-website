@@ -1,38 +1,150 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { eq, asc } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+import {
+  siteContent,
+  imageSlots,
+  galleryImages,
+  leads,
+  adminSettings,
+  type InsertLead,
+  type Lead,
+  type GalleryImage,
+  type ImageSlot,
+  type SiteContent,
+} from "@shared/schema";
+import bcrypt from "bcryptjs";
 
-// modify the interface with any CRUD methods
-// you might need
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const db = drizzle(pool);
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getAllContent(): Promise<SiteContent[]>;
+  getContent(key: string): Promise<string | null>;
+  setContent(key: string, value: string): Promise<void>;
+
+  getAllImageSlots(): Promise<ImageSlot[]>;
+  getImageSlot(slotKey: string): Promise<ImageSlot | undefined>;
+  upsertImageSlot(slotKey: string, filePath: string | null, alt: string, aspectRatioLabel: string): Promise<ImageSlot>;
+  updateImageSlotFile(slotKey: string, filePath: string): Promise<void>;
+  updateImageSlotAlt(slotKey: string, alt: string): Promise<void>;
+
+  getAllGalleryImages(): Promise<GalleryImage[]>;
+  addGalleryImage(filePath: string, alt: string, sortOrder: number): Promise<GalleryImage>;
+  updateGalleryImage(id: number, alt: string): Promise<void>;
+  deleteGalleryImage(id: number): Promise<void>;
+  reorderGalleryImages(ids: number[]): Promise<void>;
+
+  createLead(lead: InsertLead): Promise<Lead>;
+  getAllLeads(): Promise<Lead[]>;
+
+  getAdminPassword(): Promise<string | null>;
+  setAdminPassword(hashedPassword: string): Promise<void>;
+  verifyAdminPassword(password: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getAllContent(): Promise<SiteContent[]> {
+    return db.select().from(siteContent);
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getContent(key: string): Promise<string | null> {
+    const result = await db.select().from(siteContent).where(eq(siteContent.key, key));
+    return result[0]?.value ?? null;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async setContent(key: string, value: string): Promise<void> {
+    const existing = await db.select().from(siteContent).where(eq(siteContent.key, key));
+    if (existing.length > 0) {
+      await db.update(siteContent).set({ value }).where(eq(siteContent.key, key));
+    } else {
+      await db.insert(siteContent).values({ key, value });
+    }
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getAllImageSlots(): Promise<ImageSlot[]> {
+    return db.select().from(imageSlots);
+  }
+
+  async getImageSlot(slotKey: string): Promise<ImageSlot | undefined> {
+    const result = await db.select().from(imageSlots).where(eq(imageSlots.slotKey, slotKey));
+    return result[0];
+  }
+
+  async upsertImageSlot(slotKey: string, filePath: string | null, alt: string, aspectRatioLabel: string): Promise<ImageSlot> {
+    const existing = await this.getImageSlot(slotKey);
+    if (existing) {
+      await db.update(imageSlots).set({ filePath, alt, aspectRatioLabel, updatedAt: new Date() }).where(eq(imageSlots.slotKey, slotKey));
+      return (await this.getImageSlot(slotKey))!;
+    } else {
+      const result = await db.insert(imageSlots).values({ slotKey, filePath, alt, aspectRatioLabel }).returning();
+      return result[0];
+    }
+  }
+
+  async updateImageSlotFile(slotKey: string, filePath: string): Promise<void> {
+    await db.update(imageSlots).set({ filePath, updatedAt: new Date() }).where(eq(imageSlots.slotKey, slotKey));
+  }
+
+  async updateImageSlotAlt(slotKey: string, alt: string): Promise<void> {
+    await db.update(imageSlots).set({ alt, updatedAt: new Date() }).where(eq(imageSlots.slotKey, slotKey));
+  }
+
+  async getAllGalleryImages(): Promise<GalleryImage[]> {
+    return db.select().from(galleryImages).orderBy(asc(galleryImages.sortOrder));
+  }
+
+  async addGalleryImage(filePath: string, alt: string, sortOrder: number): Promise<GalleryImage> {
+    const result = await db.insert(galleryImages).values({ filePath, alt, sortOrder }).returning();
+    return result[0];
+  }
+
+  async updateGalleryImage(id: number, alt: string): Promise<void> {
+    await db.update(galleryImages).set({ alt, updatedAt: new Date() }).where(eq(galleryImages.id, id));
+  }
+
+  async deleteGalleryImage(id: number): Promise<void> {
+    await db.delete(galleryImages).where(eq(galleryImages.id, id));
+  }
+
+  async reorderGalleryImages(ids: number[]): Promise<void> {
+    for (let i = 0; i < ids.length; i++) {
+      await db.update(galleryImages).set({ sortOrder: i }).where(eq(galleryImages.id, ids[i]));
+    }
+  }
+
+  async createLead(lead: InsertLead): Promise<Lead> {
+    const result = await db.insert(leads).values(lead).returning();
+    return result[0];
+  }
+
+  async getAllLeads(): Promise<Lead[]> {
+    return db.select().from(leads);
+  }
+
+  async getAdminPassword(): Promise<string | null> {
+    const result = await db.select().from(adminSettings).where(eq(adminSettings.key, "admin_password"));
+    return result[0]?.value ?? null;
+  }
+
+  async setAdminPassword(plainPassword: string): Promise<void> {
+    const hashed = await bcrypt.hash(plainPassword, 10);
+    const existing = await db.select().from(adminSettings).where(eq(adminSettings.key, "admin_password"));
+    if (existing.length > 0) {
+      await db.update(adminSettings).set({ value: hashed }).where(eq(adminSettings.key, "admin_password"));
+    } else {
+      await db.insert(adminSettings).values({ key: "admin_password", value: hashed });
+    }
+  }
+
+  async verifyAdminPassword(password: string): Promise<boolean> {
+    const hashed = await this.getAdminPassword();
+    if (!hashed) return false;
+    return bcrypt.compare(password, hashed);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
