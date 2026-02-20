@@ -14,10 +14,10 @@ import { useMutation } from "@tanstack/react-query";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "שם חייב להכיל לפחות 2 תווים" }),
-  phone: z.string().min(9, { message: "מספר טלפון לא תקין" }),
-  email: z.string().email({ message: "כתובת אימייל לא תקינה" }),
-  status: z.string({ required_error: "נא לבחור סטטוס זוגי" }),
-  goals: z.string().min(5, { message: "נא לפרט מה תרצו לשפר" }),
+  phone: z.string().regex(/^\d{10}$/, { message: "מספר טלפון חייב להכיל 10 ספרות" }),
+  email: z.string().min(1, { message: "אימייל הוא שדה חובה" }).email({ message: "כתובת אימייל לא תקינה" }),
+  status: z.string({ required_error: "נא לבחור סטטוס זוגי" }).min(1, { message: "נא לבחור סטטוס זוגי" }),
+  goals: z.string().min(5, { message: "נא לפרט מה תרצו לשפר (לפחות 5 תווים)" }),
   agree: z.boolean().refine(val => val === true, {
     message: "חובה לאשר יצירת קשר",
   }),

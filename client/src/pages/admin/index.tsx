@@ -15,7 +15,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Lead } from "@shared/schema";
 
 const MAX_GALLERY_IMAGES = 5;
-const POLL_INTERVAL = 15000;
+const POLL_INTERVAL = 5000;
 
 function playNotificationSound() {
   try {

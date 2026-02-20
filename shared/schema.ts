@@ -44,7 +44,13 @@ export const adminSettings = pgTable("admin_settings", {
   value: text("value").notNull(),
 });
 
-export const insertLeadSchema = createInsertSchema(leads).omit({ id: true, seen: true, deletedAt: true, createdAt: true });
+export const insertLeadSchema = createInsertSchema(leads, {
+  phone: z.string().regex(/^\d{10}$/, { message: "מספר טלפון חייב להכיל 10 ספרות" }),
+  name: z.string().min(2, { message: "שם חייב להכיל לפחות 2 תווים" }),
+  email: z.string().min(1).email({ message: "כתובת אימייל לא תקינה" }),
+  status: z.string().min(1, { message: "נא לבחור סטטוס זוגי" }),
+  goals: z.string().min(5, { message: "נא לפרט מה תרצו לשפר" }),
+}).omit({ id: true, seen: true, deletedAt: true, createdAt: true });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;
 
