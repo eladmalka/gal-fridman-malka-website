@@ -1,4 +1,4 @@
-import { eq, asc, desc, sql } from "drizzle-orm";
+import { eq, asc, desc, sql, isNull, isNotNull, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import {
@@ -42,6 +42,11 @@ export interface IStorage {
   getAllLeads(): Promise<Lead[]>;
   getUnseenLeadsCount(): Promise<number>;
   markLeadsSeen(ids: number[]): Promise<void>;
+  softDeleteLead(id: number): Promise<void>;
+  restoreLead(id: number): Promise<void>;
+  getTrashedLeads(): Promise<Lead[]>;
+  permanentDeleteLead(id: number): Promise<void>;
+  cleanupOldTrash(): Promise<number>;
 
   getAdminPassword(): Promise<string | null>;
   setAdminPassword(hashedPassword: string): Promise<void>;
@@ -124,11 +129,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllLeads(): Promise<Lead[]> {
-    return db.select().from(leads).orderBy(desc(leads.createdAt));
+    return db.select().from(leads).where(isNull(leads.deletedAt)).orderBy(desc(leads.createdAt));
   }
 
   async getUnseenLeadsCount(): Promise<number> {
-    const result = await db.select({ count: sql<number>`count(*)::int` }).from(leads).where(eq(leads.seen, false));
+    const result = await db.select({ count: sql<number>`count(*)::int` }).from(leads).where(sql`${leads.seen} = false AND ${leads.deletedAt} IS NULL`);
     return result[0]?.count ?? 0;
   }
 
@@ -136,6 +141,31 @@ export class DatabaseStorage implements IStorage {
     for (const id of ids) {
       await db.update(leads).set({ seen: true }).where(eq(leads.id, id));
     }
+  }
+
+  async softDeleteLead(id: number): Promise<void> {
+    await db.update(leads).set({ deletedAt: new Date() }).where(eq(leads.id, id));
+  }
+
+  async restoreLead(id: number): Promise<void> {
+    await db.update(leads).set({ deletedAt: null }).where(eq(leads.id, id));
+  }
+
+  async getTrashedLeads(): Promise<Lead[]> {
+    return db.select().from(leads).where(isNotNull(leads.deletedAt)).orderBy(desc(leads.deletedAt));
+  }
+
+  async permanentDeleteLead(id: number): Promise<void> {
+    await db.delete(leads).where(eq(leads.id, id));
+  }
+
+  async cleanupOldTrash(): Promise<number> {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const old = await db.select({ id: leads.id }).from(leads).where(sql`${leads.deletedAt} IS NOT NULL AND ${leads.deletedAt} < ${thirtyDaysAgo}`);
+    for (const row of old) {
+      await db.delete(leads).where(eq(leads.id, row.id));
+    }
+    return old.length;
   }
 
   async getAdminPassword(): Promise<string | null> {

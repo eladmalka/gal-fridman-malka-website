@@ -145,6 +145,96 @@ export default function Admin() {
     }
   };
 
+  const [showTrash, setShowTrash] = useState(false);
+  const [showTrashConfirm, setShowTrashConfirm] = useState(false);
+  const [trashTargetId, setTrashTargetId] = useState<number | null>(null);
+  const [showPermanentDeleteConfirm, setShowPermanentDeleteConfirm] = useState(false);
+  const [permanentDeleteTargetId, setPermanentDeleteTargetId] = useState<number | null>(null);
+
+  const { data: trashedLeads, refetch: refetchTrash } = useQuery<Lead[]>({
+    queryKey: ["/api/leads/trash"],
+    queryFn: async () => {
+      const res = await fetch("/api/leads/trash");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    enabled: isLoggedIn && showTrash,
+  });
+
+  const trashMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("POST", `/api/leads/${id}/trash`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/unseen-count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
+      toast({ title: "הפנייה הועברה לפח" });
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("POST", `/api/leads/${id}/restore`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/unseen-count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
+      toast({ title: "הפנייה שוחזרה בהצלחה" });
+    },
+  });
+
+  const permanentDeleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/leads/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
+      toast({ title: "הפנייה נמחקה לצמיתות" });
+    },
+  });
+
+  const handleTrashLead = (id: number) => {
+    setTrashTargetId(id);
+    setShowTrashConfirm(true);
+  };
+
+  const confirmTrashLead = () => {
+    if (trashTargetId !== null) {
+      trashMutation.mutate(trashTargetId);
+    }
+    setShowTrashConfirm(false);
+    setTrashTargetId(null);
+  };
+
+  const handlePermanentDelete = (id: number) => {
+    setPermanentDeleteTargetId(id);
+    setShowPermanentDeleteConfirm(true);
+  };
+
+  const confirmPermanentDelete = () => {
+    if (permanentDeleteTargetId !== null) {
+      permanentDeleteMutation.mutate(permanentDeleteTargetId);
+    }
+    setShowPermanentDeleteConfirm(false);
+    setPermanentDeleteTargetId(null);
+  };
+
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+
+  const getDaysUntilDeletion = (deletedAt: string | Date | null) => {
+    if (!deletedAt) return 30;
+    const deleted = new Date(deletedAt).getTime();
+    const now = Date.now();
+    const daysElapsed = Math.floor((now - deleted) / (1000 * 60 * 60 * 24));
+    return Math.max(0, 30 - daysElapsed);
+  };
+
   useEffect(() => {
     const texts = {
       "hero.badge": content.hero.badge,
@@ -573,7 +663,7 @@ export default function Admin() {
                               <Badge className="bg-primary text-white text-[10px] px-2 py-0.5">חדש</Badge>
                             )}
                             <span className="text-xs text-muted-foreground">
-                              {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
+                              {formatDate(lead.createdAt)}
                             </span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
@@ -595,16 +685,79 @@ export default function Admin() {
                             </div>
                           </div>
                         </div>
-                        {!lead.seen && (
-                          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-primary" onClick={() => markSeenMutation.mutate([lead.id])} data-testid={`btn-mark-seen-${lead.id}`}>
-                            <Eye size={18} />
+                        <div className="flex flex-col gap-1 shrink-0">
+                          {!lead.seen && (
+                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => markSeenMutation.mutate([lead.id])} title="סמן כנקרא" data-testid={`btn-mark-seen-${lead.id}`}>
+                              <Eye size={18} />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleTrashLead(lead.id)} title="העבר לפח" data-testid={`btn-trash-lead-${lead.id}`}>
+                            <Trash2 size={18} />
                           </Button>
-                        )}
+                        </div>
                       </div>
                     </Card>
                   ))
                 )}
               </CardContent>
+            </Card>
+
+            {/* Trash Section */}
+            <Card className="border-dashed">
+              <CardHeader className="cursor-pointer" onClick={() => setShowTrash(!showTrash)}>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-muted-foreground text-base">
+                    <Trash2 size={18} />
+                    פח אשפה
+                    {trashedLeads && trashedLeads.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">{trashedLeads.length}</Badge>
+                    )}
+                  </CardTitle>
+                  <span className="text-xs text-muted-foreground">
+                    {showTrash ? "הסתר" : "הצג"} | פניות נמחקות אוטומטית לאחר 30 יום
+                  </span>
+                </div>
+              </CardHeader>
+              {showTrash && (
+                <CardContent className="space-y-4">
+                  {!trashedLeads || trashedLeads.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Trash2 size={36} className="mx-auto mb-3 opacity-20" />
+                      <p className="text-sm">הפח ריק</p>
+                    </div>
+                  ) : (
+                    trashedLeads.map((lead) => (
+                      <Card key={lead.id} className="p-4 bg-muted/30 border-border/30" data-testid={`card-trashed-${lead.id}`}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-grow space-y-2">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <h3 className="font-medium">{lead.name}</h3>
+                              <span className="text-xs text-muted-foreground">{formatDate(lead.createdAt)}</span>
+                              <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">
+                                יימחק בעוד {getDaysUntilDeletion(lead.deletedAt)} ימים
+                              </Badge>
+                            </div>
+                            <div className="flex gap-4 text-xs text-muted-foreground">
+                              <span>{lead.phone}</span>
+                              <span>{lead.email}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 gap-1" onClick={() => restoreMutation.mutate(lead.id)} data-testid={`btn-restore-${lead.id}`}>
+                              <UploadCloud size={14} />
+                              שחזר
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 gap-1" onClick={() => handlePermanentDelete(lead.id)} data-testid={`btn-perm-delete-${lead.id}`}>
+                              <X size={14} />
+                              מחק לצמיתות
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </CardContent>
+              )}
             </Card>
           </TabsContent>
 
@@ -978,6 +1131,34 @@ export default function Admin() {
               כן, החלף
             </AlertDialogAction>
             <AlertDialogCancel onClick={cleanupGalleryConfirm} data-testid="btn-cancel-replace">לא, בטל</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Trash lead confirmation */}
+      <AlertDialog open={showTrashConfirm} onOpenChange={setShowTrashConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>העברה לפח אשפה</AlertDialogTitle>
+            <AlertDialogDescription>האם את בטוחה שאת רוצה להעביר את הפנייה הזו לפח? ניתן לשחזר אותה תוך 30 יום.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={confirmTrashLead} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-trash">כן, העבר לפח</AlertDialogAction>
+            <AlertDialogCancel data-testid="btn-cancel-trash">לא, בטל</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent delete confirmation */}
+      <AlertDialog open={showPermanentDeleteConfirm} onOpenChange={setShowPermanentDeleteConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקה לצמיתות</AlertDialogTitle>
+            <AlertDialogDescription>פעולה זו בלתי הפיכה! הפנייה תימחק לצמיתות ולא ניתן יהיה לשחזר אותה.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={confirmPermanentDelete} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-perm-delete">כן, מחק לצמיתות</AlertDialogAction>
+            <AlertDialogCancel data-testid="btn-cancel-perm-delete">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

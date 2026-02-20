@@ -269,6 +269,45 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/leads/:id/trash", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      await storage.softDeleteLead(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to trash lead" });
+    }
+  });
+
+  app.post("/api/leads/:id/restore", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      await storage.restoreLead(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to restore lead" });
+    }
+  });
+
+  app.delete("/api/leads/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id as string);
+      await storage.permanentDeleteLead(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete lead" });
+    }
+  });
+
+  app.get("/api/leads/trash", async (_req, res) => {
+    try {
+      const trashed = await storage.getTrashedLeads();
+      res.json(trashed);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch trashed leads" });
+    }
+  });
+
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { password } = req.body;
@@ -341,6 +380,11 @@ export async function registerRoutes(
           fs.copyFileSync(benefitsSrc, path.join(uploadDir, benefitsName));
           await storage.upsertImageSlot("BENEFITS_IMAGE", `/uploads/${benefitsName}`, "קליניקה ואווירה", "3:4 אופקי (מומלץ 800x1000)");
         }
+      }
+
+      const cleaned = await storage.cleanupOldTrash();
+      if (cleaned > 0) {
+        console.log(`Cleaned up ${cleaned} trashed leads older than 30 days`);
       }
 
       res.json({ initialized: true });
