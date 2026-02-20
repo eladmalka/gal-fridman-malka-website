@@ -1,13 +1,15 @@
 import img from "@/assets/images/gallery-1.jpg";
+import { useContent } from "@/lib/content-context";
 
 export function Benefits() {
+  const { content } = useContent();
   return (
     <section className="py-24 bg-white">
       <div className="container px-4">
         <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">למה נומרולוגיה ואימון זוגי עובדים כל כך טוב ביחד?</h2>
+          <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">{content.benefits.title}</h2>
           <p className="text-xl text-muted-foreground font-light leading-relaxed">
-            כשמשלבים אבחון מדויק עם כלים מעשיים, התהליך הופך להיות ברור, קצר ואפקטיבי הרבה יותר.
+            {content.benefits.description}
           </p>
         </div>
 

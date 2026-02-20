@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import { useContent } from "@/lib/content-context";
 
 export function Services() {
+  const { content } = useContent();
   const services = [
     {
       title: "מפה נומרולוגית אישית",
@@ -39,9 +41,9 @@ export function Services() {
       
       <div className="container relative z-10 px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-black mb-4">איך נוכל לעבוד יחד?</h2>
+          <h2 className="text-3xl md:text-5xl font-black mb-4">{content.services.title}</h2>
           <p className="text-xl text-muted-foreground font-light max-w-2xl mx-auto">
-            תהליכים מדויקים המשלבים עומק רוחני ופרקטיקה יומיומית
+            {content.services.description}
           </p>
         </div>
 

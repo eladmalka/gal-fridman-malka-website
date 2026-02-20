@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import heroImg from "@/assets/images/hero.jpg";
 import { MessageCircle } from "lucide-react";
+import { useContent } from "@/lib/content-context";
 
 export function Hero() {
+  const { content } = useContent();
   const scrollToContact = () => {
     document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -20,14 +22,14 @@ export function Hero() {
       
       <div className="container relative z-10 px-4 py-32 text-center flex flex-col items-center">
         <div className="inline-block mb-6 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-sm border border-primary/20 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
-          אימון זוגי & נומרולוגיה
+          {content.hero.badge}
         </div>
         <h1 className="text-5xl md:text-7xl font-black mb-6 text-foreground tracking-tight animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          גל פרידמן מלכה <br/>
-          <span className="text-primary font-light text-4xl md:text-6xl">נומרולוגית ומאמנת זוגית</span>
+          {content.hero.titleMain} <br/>
+          <span className="text-primary font-light text-4xl md:text-6xl">{content.hero.titleSub}</span>
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 font-light animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
-          שילוב ייחודי של אבחון נומרולוגי עמוק עם כלים פרקטיים מעולם האימון הזוגי, ליצירת תקשורת טובה יותר, הבנה וחיבור אמיתי.
+          {content.hero.description}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
           <Button 

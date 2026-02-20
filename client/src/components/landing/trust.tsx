@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, Target, Heart, Sparkles } from "lucide-react";
+import { useContent } from "@/lib/content-context";
 
 export function Trust() {
+  const { content } = useContent();
   const highlights = [
     { icon: Target, text: "אבחון חד ומדויק" },
     { icon: Heart, text: "כלים זוגיים פרקטיים" },
@@ -39,7 +41,7 @@ export function Trust() {
         </div>
 
         {/* Testimonials */}
-        <h2 className="text-3xl md:text-4xl font-black text-center mb-12 text-foreground">מה מספרים עלינו</h2>
+        <h2 className="text-3xl md:text-4xl font-black text-center mb-12 text-foreground">{content.trust.testimonialsTitle}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((t, i) => (
             <Card key={i} className="bg-background/50 border-none shadow-sm hover:shadow-md transition-shadow" data-testid={`testimonial-${i}`}>

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useContent } from "@/lib/content-context";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "שם חייב להכיל לפחות 2 תווים" }),
@@ -22,6 +23,7 @@ const formSchema = z.object({
 
 export function Contact() {
   const { toast } = useToast();
+  const { content } = useContent();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,9 +49,9 @@ export function Contact() {
     <section id="contact" className="py-24 bg-white">
       <div className="container px-4 max-w-2xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-5xl font-black mb-4">בואי נתחיל</h2>
+          <h2 className="text-3xl md:text-5xl font-black mb-4">{content.contact.title}</h2>
           <p className="text-xl text-muted-foreground font-light">
-            השאירי פרטים לשיחת היכרות קצרה ללא עלות
+            {content.contact.subtitle}
           </p>
         </div>
 
