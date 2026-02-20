@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,11 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { ImagePlus, Trash2, GripVertical, LogOut, Check, UploadCloud } from "lucide-react";
-import { useContent } from "@/lib/content-context";
+import { useContent, useRefetchContent } from "@/lib/content-context";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function Admin() {
-  const { content, setContent, adminPassword, setAdminPassword } = useContent();
+  const { content } = useContent();
+  const refetchContent = useRefetchContent();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
@@ -18,43 +22,102 @@ export default function Admin() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === adminPassword) {
+  const [localTexts, setLocalTexts] = useState<Record<string, string>>({});
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setLocalTexts({
+      "hero.badge": content.hero.badge,
+      "hero.titleMain": content.hero.titleMain,
+      "hero.titleSub": content.hero.titleSub,
+      "hero.description": content.hero.description,
+      "trust.testimonialsTitle": content.trust.testimonialsTitle,
+      "services.title": content.services.title,
+      "services.description": content.services.description,
+      "benefits.title": content.benefits.title,
+      "benefits.description": content.benefits.description,
+      "gallery.title": content.gallery.title,
+      "contact.title": content.contact.title,
+      "contact.subtitle": content.contact.subtitle,
+    });
+  }, [content]);
+
+  const textMutation = useMutation({
+    mutationFn: async (entries: Record<string, string>) => {
+      await apiRequest("PUT", "/api/content", entries);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/content"] });
+    },
+  });
+
+  const handleUpdateText = useCallback((key: string, value: string) => {
+    setLocalTexts(prev => ({ ...prev, [key]: value }));
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      textMutation.mutate({ [key]: value });
+    }, 800);
+  }, [textMutation]);
+
+  const loginMutation = useMutation({
+    mutationFn: async (pw: string) => {
+      await apiRequest("POST", "/api/admin/login", { password: pw });
+    },
+    onSuccess: () => {
       setIsLoggedIn(true);
-    } else {
+      setPassword("");
+    },
+    onError: () => {
       toast({
         variant: "destructive",
         title: "שגיאה",
         description: "סיסמה שגויה.",
       });
-    }
+    },
+  });
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate(password);
   };
 
-  const handleUpdateText = (section: keyof typeof content, field: string, value: string) => {
-    setContent({
-      ...content,
-      [section]: {
-        ...content[section],
-        [field]: value
-      }
-    });
-  };
+  const imageSlotUploadMutation = useMutation({
+    mutationFn: async ({ slotKey, file }: { slotKey: string; file: File }) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch(`/api/image-slots/${slotKey}/upload`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchContent();
+      toast({
+        title: "התמונה הוחלפה בהצלחה",
+        description: "השינוי יעודכן באתר מיד.",
+      });
+    },
+    onError: () => {
+      toast({ variant: "destructive", title: "שגיאה", description: "העלאת התמונה נכשלה." });
+    },
+  });
 
-  const handleUpdateImageSlotAlt = (key: string, alt: string) => {
-    setContent({
-      ...content,
-      images: {
-        ...content.images,
-        [key]: {
-          ...content.images[key],
-          alt
-        }
-      }
-    });
-  };
+  const imageSlotAltMutation = useMutation({
+    mutationFn: async ({ slotKey, alt }: { slotKey: string; alt: string }) => {
+      await apiRequest("PUT", `/api/image-slots/${slotKey}`, { alt });
+    },
+    onSuccess: () => {
+      refetchContent();
+    },
+  });
 
   const triggerUpload = (slotKey: string) => {
     setActiveSlot(slotKey);
@@ -64,59 +127,102 @@ export default function Admin() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activeSlot) {
-      const url = URL.createObjectURL(file);
-      // In mockup mode we just create an object URL. In real app, this would be an API call to sharp.
-      setContent({
-        ...content,
-        images: {
-          ...content.images,
-          [activeSlot]: {
-            ...content.images[activeSlot],
-            url
-          }
-        }
-      });
-      
-      toast({
-        title: "התמונה הוחלפה בהצלחה",
-        description: "השינוי יעודכן באתר מיד."
-      });
+      imageSlotUploadMutation.mutate({ slotKey: activeSlot, file });
     }
+    if (e.target) e.target.value = "";
   };
 
-  // Gallery
-  const deleteGalleryImage = (id: number) => {
-    setContent({
-      ...content,
-      gallery: {
-        ...content.gallery,
-        images: content.gallery.images.filter(img => img.id !== id)
-      }
-    });
+  const galleryUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/gallery/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchContent();
+      toast({ title: "התמונה נוספה לגלריה בהצלחה" });
+    },
+    onError: () => {
+      toast({ variant: "destructive", title: "שגיאה", description: "העלאת התמונה נכשלה." });
+    },
+  });
+
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      galleryUploadMutation.mutate(file);
+    }
+    if (e.target) e.target.value = "";
   };
+
+  const galleryDeleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/gallery/${id}`);
+    },
+    onSuccess: () => {
+      refetchContent();
+      toast({ title: "התמונה נמחקה בהצלחה" });
+    },
+  });
+
+  const galleryAltMutation = useMutation({
+    mutationFn: async ({ id, alt }: { id: number; alt: string }) => {
+      await apiRequest("PUT", `/api/gallery/${id}`, { alt });
+    },
+    onSuccess: () => {
+      refetchContent();
+    },
+  });
+
+  const galleryAltDebounceRef = useRef<Record<number, NodeJS.Timeout>>({});
 
   const handleUpdateGalleryImageAlt = (id: number, alt: string) => {
-    setContent({
-      ...content,
-      gallery: {
-        ...content.gallery,
-        images: content.gallery.images.map(img => 
-          img.id === id ? { ...img, alt } : img
-        )
-      }
-    });
+    if (galleryAltDebounceRef.current[id]) {
+      clearTimeout(galleryAltDebounceRef.current[id]);
+    }
+    galleryAltDebounceRef.current[id] = setTimeout(() => {
+      galleryAltMutation.mutate({ id, alt });
+    }, 800);
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentPassword !== adminPassword) {
+  const imageSlotAltDebounceRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  const handleUpdateImageSlotAlt = (key: string, alt: string) => {
+    if (imageSlotAltDebounceRef.current[key]) {
+      clearTimeout(imageSlotAltDebounceRef.current[key]);
+    }
+    imageSlotAltDebounceRef.current[key] = setTimeout(() => {
+      imageSlotAltMutation.mutate({ slotKey: key, alt });
+    }, 800);
+  };
+
+  const passwordMutation = useMutation({
+    mutationFn: async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) => {
+      await apiRequest("POST", "/api/admin/change-password", { currentPassword, newPassword });
+    },
+    onSuccess: () => {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast({ title: "הסיסמה שונתה בהצלחה" });
+    },
+    onError: (error: Error) => {
       toast({
         variant: "destructive",
         title: "שגיאה",
-        description: "הסיסמה הנוכחית אינה נכונה.",
+        description: error.message.includes("401") ? "הסיסמה הנוכחית אינה נכונה." : "שינוי הסיסמה נכשל.",
       });
-      return;
-    }
+    },
+  });
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
     if (newPassword !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -133,13 +239,7 @@ export default function Admin() {
       });
       return;
     }
-    setAdminPassword(newPassword);
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    toast({
-      title: "הסיסמה שונתה בהצלחה",
-    });
+    passwordMutation.mutate({ currentPassword, newPassword });
   };
 
   if (!isLoggedIn) {
@@ -160,7 +260,9 @@ export default function Admin() {
                 className="bg-white"
                 data-testid="input-admin-password"
               />
-              <Button type="submit" className="w-full" data-testid="btn-admin-login">היכנס</Button>
+              <Button type="submit" className="w-full" data-testid="btn-admin-login" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? "מתחבר..." : "היכנס"}
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -174,6 +276,13 @@ export default function Admin() {
         type="file" 
         ref={fileInputRef} 
         onChange={handleFileUpload} 
+        accept="image/*" 
+        className="hidden" 
+      />
+      <input 
+        type="file" 
+        ref={galleryFileInputRef} 
+        onChange={handleGalleryUpload} 
         accept="image/*" 
         className="hidden" 
       />
@@ -205,19 +314,19 @@ export default function Admin() {
                   <h3 className="font-bold text-lg text-primary">אזור ראשי (Hero)</h3>
                   <div className="space-y-2">
                     <Label>תגית עליונה</Label>
-                    <Input value={content.hero.badge} onChange={(e) => handleUpdateText('hero', 'badge', e.target.value)} />
+                    <Input value={localTexts["hero.badge"] ?? ""} onChange={(e) => handleUpdateText('hero.badge', e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label>כותרת ראשית</Label>
-                    <Input value={content.hero.titleMain} onChange={(e) => handleUpdateText('hero', 'titleMain', e.target.value)} />
+                    <Input value={localTexts["hero.titleMain"] ?? ""} onChange={(e) => handleUpdateText('hero.titleMain', e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label>תת כותרת</Label>
-                    <Input value={content.hero.titleSub} onChange={(e) => handleUpdateText('hero', 'titleSub', e.target.value)} />
+                    <Input value={localTexts["hero.titleSub"] ?? ""} onChange={(e) => handleUpdateText('hero.titleSub', e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label>תיאור</Label>
-                    <Textarea value={content.hero.description} onChange={(e) => handleUpdateText('hero', 'description', e.target.value)} className="h-24 resize-none" />
+                    <Textarea value={localTexts["hero.description"] ?? ""} onChange={(e) => handleUpdateText('hero.description', e.target.value)} className="h-24 resize-none" />
                   </div>
                 </div>
 
@@ -225,7 +334,7 @@ export default function Admin() {
                   <h3 className="font-bold text-lg text-primary">הוכחה חברתית</h3>
                   <div className="space-y-2">
                     <Label>כותרת המלצות</Label>
-                    <Input value={content.trust.testimonialsTitle} onChange={(e) => handleUpdateText('trust', 'testimonialsTitle', e.target.value)} />
+                    <Input value={localTexts["trust.testimonialsTitle"] ?? ""} onChange={(e) => handleUpdateText('trust.testimonialsTitle', e.target.value)} />
                   </div>
                 </div>
 
@@ -233,11 +342,11 @@ export default function Admin() {
                   <h3 className="font-bold text-lg text-primary">שירותים</h3>
                   <div className="space-y-2">
                     <Label>כותרת ראשית</Label>
-                    <Input value={content.services.title} onChange={(e) => handleUpdateText('services', 'title', e.target.value)} />
+                    <Input value={localTexts["services.title"] ?? ""} onChange={(e) => handleUpdateText('services.title', e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label>כותרת משנית</Label>
-                    <Input value={content.services.description} onChange={(e) => handleUpdateText('services', 'description', e.target.value)} />
+                    <Input value={localTexts["services.description"] ?? ""} onChange={(e) => handleUpdateText('services.description', e.target.value)} />
                   </div>
                 </div>
 
@@ -245,11 +354,11 @@ export default function Admin() {
                   <h3 className="font-bold text-lg text-primary">למה אנחנו</h3>
                   <div className="space-y-2">
                     <Label>כותרת ראשית</Label>
-                    <Input value={content.benefits.title} onChange={(e) => handleUpdateText('benefits', 'title', e.target.value)} />
+                    <Input value={localTexts["benefits.title"] ?? ""} onChange={(e) => handleUpdateText('benefits.title', e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label>כותרת משנית</Label>
-                    <Textarea value={content.benefits.description} onChange={(e) => handleUpdateText('benefits', 'description', e.target.value)} className="h-20 resize-none"/>
+                    <Textarea value={localTexts["benefits.description"] ?? ""} onChange={(e) => handleUpdateText('benefits.description', e.target.value)} className="h-20 resize-none"/>
                   </div>
                 </div>
                 
@@ -257,7 +366,7 @@ export default function Admin() {
                   <h3 className="font-bold text-lg text-primary">גלריה</h3>
                   <div className="space-y-2">
                     <Label>כותרת ראשית לגלריה</Label>
-                    <Input value={content.gallery.title} onChange={(e) => handleUpdateText('gallery', 'title', e.target.value)} />
+                    <Input value={localTexts["gallery.title"] ?? ""} onChange={(e) => handleUpdateText('gallery.title', e.target.value)} />
                   </div>
                 </div>
 
@@ -265,11 +374,11 @@ export default function Admin() {
                   <h3 className="font-bold text-lg text-primary">יצירת קשר</h3>
                   <div className="space-y-2">
                     <Label>כותרת</Label>
-                    <Input value={content.contact.title} onChange={(e) => handleUpdateText('contact', 'title', e.target.value)} />
+                    <Input value={localTexts["contact.title"] ?? ""} onChange={(e) => handleUpdateText('contact.title', e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label>תת כותרת</Label>
-                    <Input value={content.contact.subtitle} onChange={(e) => handleUpdateText('contact', 'subtitle', e.target.value)} />
+                    <Input value={localTexts["contact.subtitle"] ?? ""} onChange={(e) => handleUpdateText('contact.subtitle', e.target.value)} />
                   </div>
                 </div>
 
@@ -302,7 +411,7 @@ export default function Admin() {
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">טקסט חלופי (Alt)</Label>
                         <Input 
-                          value={slot.alt} 
+                          defaultValue={slot.alt} 
                           onChange={(e) => handleUpdateImageSlotAlt(key, e.target.value)}
                           placeholder="תיאור התמונה לנגישות" 
                           className="bg-white" 
@@ -326,8 +435,14 @@ export default function Admin() {
               <CardContent className="pt-6 flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <ImagePlus size={48} className="mb-4 opacity-50" />
                 <p>גרור לכאן תמונות או לחץ להעלאה</p>
-                <p className="text-sm mt-2 opacity-70">(ממשק דמו - ללא העלאה אמיתית לשרת)</p>
-                <Button className="mt-4" variant="secondary">בחר תמונה</Button>
+                <Button 
+                  className="mt-4" 
+                  variant="secondary" 
+                  onClick={() => galleryFileInputRef.current?.click()}
+                  disabled={galleryUploadMutation.isPending}
+                >
+                  {galleryUploadMutation.isPending ? "מעלה..." : "בחר תמונה"}
+                </Button>
               </CardContent>
             </Card>
 
@@ -342,13 +457,13 @@ export default function Admin() {
                   <div className="flex-grow w-full sm:w-auto">
                     <Label className="text-xs mb-1 block text-muted-foreground">טקסט חלופי (Alt)</Label>
                     <Input 
-                      value={img.alt} 
+                      defaultValue={img.alt} 
                       onChange={(e) => handleUpdateGalleryImageAlt(img.id, e.target.value)}
                       placeholder="טקסט חלופי (Alt)" 
                       className="w-full bg-transparent" 
                     />
                   </div>
-                  <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive self-end sm:self-auto" size="icon" onClick={() => deleteGalleryImage(img.id)} data-testid={`btn-delete-img-${img.id}`}>
+                  <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive self-end sm:self-auto" size="icon" onClick={() => galleryDeleteMutation.mutate(img.id)} data-testid={`btn-delete-img-${img.id}`}>
                     <Trash2 size={18} />
                   </Button>
                 </Card>
@@ -391,8 +506,8 @@ export default function Admin() {
                       dir="ltr"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={!currentPassword || !newPassword || !confirmPassword}>
-                    שמור סיסמה
+                  <Button type="submit" className="w-full" disabled={!currentPassword || !newPassword || !confirmPassword || passwordMutation.isPending}>
+                    {passwordMutation.isPending ? "שומר..." : "שמור סיסמה"}
                   </Button>
                 </form>
               </CardContent>

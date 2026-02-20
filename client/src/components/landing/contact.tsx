@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useContent } from "@/lib/content-context";
+import { apiRequest } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "שם חייב להכיל לפחות 2 תווים" }),
@@ -36,13 +38,29 @@ export function Contact() {
     },
   });
 
+  const submitMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const { agree, ...data } = values;
+      await apiRequest("POST", "/api/leads", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "הפנייה נשלחה בהצלחה!",
+        description: "נחזור אליך בהקדם.",
+      });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "שליחת הפנייה נכשלה. נסי שוב מאוחר יותר.",
+      });
+    },
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Mock submission sending to: galfridman21@gmail.com", values);
-    toast({
-      title: "הפנייה נשלחה בהצלחה!",
-      description: "המייל הועבר ל-galfridman21@gmail.com",
-    });
-    form.reset();
+    submitMutation.mutate(values);
   }
 
   return (
@@ -165,8 +183,13 @@ export function Contact() {
                 )}
               />
 
-              <Button type="submit" className="w-full h-14 text-lg rounded-full shadow-md hover:shadow-lg transition-shadow" data-testid="btn-submit-form">
-                שלחי פנייה
+              <Button 
+                type="submit" 
+                className="w-full h-14 text-lg rounded-full shadow-md hover:shadow-lg transition-shadow" 
+                data-testid="btn-submit-form"
+                disabled={submitMutation.isPending}
+              >
+                {submitMutation.isPending ? "שולח..." : "שלחי פנייה"}
               </Button>
             </form>
           </Form>
