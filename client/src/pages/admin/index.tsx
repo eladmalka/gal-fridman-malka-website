@@ -685,7 +685,7 @@ export default function Admin() {
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <MessageCircle size={14} className="shrink-0" />
-                              <span>{lead.contactMethod === "whatsapp" ? "הודעת וואטסאפ" : "שיחת טלפון"}</span>
+                              <span>פניה באמצעות: {lead.contactMethod === "whatsapp" ? "הודעת וואטסאפ" : "שיחת טלפון"}</span>
                             </div>
                           </div>
                         </div>
