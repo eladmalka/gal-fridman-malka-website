@@ -14,6 +14,7 @@ export default function Admin() {
   const { toast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,11 +109,19 @@ export default function Admin() {
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentPassword !== adminPassword) {
+      toast({
+        variant: "destructive",
+        title: "שגיאה",
+        description: "הסיסמה הנוכחית אינה נכונה.",
+      });
+      return;
+    }
     if (newPassword !== confirmPassword) {
       toast({
         variant: "destructive",
         title: "שגיאה",
-        description: "הסיסמאות אינן תואמות.",
+        description: "הסיסמאות החדשות אינן תואמות.",
       });
       return;
     }
@@ -120,11 +129,12 @@ export default function Admin() {
       toast({
         variant: "destructive",
         title: "שגיאה",
-        description: "הסיסמה צריכה להכיל לפחות 6 תווים.",
+        description: "הסיסמה החדשה צריכה להכיל לפחות 6 תווים.",
       });
       return;
     }
     setAdminPassword(newPassword);
+    setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
     toast({
@@ -355,6 +365,15 @@ export default function Admin() {
               <CardContent>
                 <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
                   <div className="space-y-2">
+                    <Label>סיסמה נוכחית</Label>
+                    <Input 
+                      type="password" 
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label>סיסמה חדשה</Label>
                     <Input 
                       type="password" 
@@ -372,7 +391,7 @@ export default function Admin() {
                       dir="ltr"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={!newPassword || !confirmPassword}>
+                  <Button type="submit" className="w-full" disabled={!currentPassword || !newPassword || !confirmPassword}>
                     שמור סיסמה
                   </Button>
                 </form>
