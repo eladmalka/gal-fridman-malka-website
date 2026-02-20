@@ -42,7 +42,7 @@ Preferred communication style: Simple, everyday language.
   - `site_content` — key-value store for editable text content
   - `image_slots` — fixed image positions (hero, profile, benefits, etc.) with file path, alt text, and aspect ratio
   - `gallery_images` — ordered gallery items with file path, alt text, and sort order
-  - `leads` — form submissions (name, phone, email, status, goals)
+  - `leads` — form submissions (name, phone, email, status, goals, seen flag for read/unread tracking)
   - `admin_settings` — key-value store for admin config (e.g., hashed password)
 - **Migrations**: Drizzle Kit with `drizzle-kit push` for schema sync
 
