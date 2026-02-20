@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.container {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
