@@ -15,6 +15,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Lead } from "@shared/schema";
 
 const MAX_GALLERY_IMAGES = 5;
+const statusLabels: Record<string, string> = {
+  married: "נשואה",
+  relationship: "בזוגיות",
+  single: "רווקה",
+  other: "אחר",
+};
 const POLL_INTERVAL = 5000;
 
 function playNotificationSound() {
@@ -785,7 +791,7 @@ export default function Admin() {
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Heart size={14} className="shrink-0" />
-                              <span>{lead.status}</span>
+                              <span>{statusLabels[lead.status] || lead.status}</span>
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Target size={14} className="shrink-0" />
