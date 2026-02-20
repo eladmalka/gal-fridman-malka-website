@@ -317,6 +317,15 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/leads/trash/restore-all", async (_req, res) => {
+    try {
+      const count = await storage.restoreAllTrash();
+      res.json({ success: true, count });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to restore all trash" });
+    }
+  });
+
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { password } = req.body;

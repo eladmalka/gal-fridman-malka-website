@@ -47,6 +47,7 @@ export interface IStorage {
   getTrashedLeads(): Promise<Lead[]>;
   permanentDeleteLead(id: number): Promise<void>;
   permanentDeleteAllTrash(): Promise<number>;
+  restoreAllTrash(): Promise<number>;
   autoTrashOldLeads(): Promise<number>;
   cleanupOldTrash(): Promise<number>;
 
@@ -165,6 +166,14 @@ export class DatabaseStorage implements IStorage {
     const trashed = await db.select({ id: leads.id }).from(leads).where(isNotNull(leads.deletedAt));
     for (const row of trashed) {
       await db.delete(leads).where(eq(leads.id, row.id));
+    }
+    return trashed.length;
+  }
+
+  async restoreAllTrash(): Promise<number> {
+    const trashed = await db.select({ id: leads.id }).from(leads).where(isNotNull(leads.deletedAt));
+    for (const row of trashed) {
+      await db.update(leads).set({ deletedAt: null }).where(eq(leads.id, row.id));
     }
     return trashed.length;
   }

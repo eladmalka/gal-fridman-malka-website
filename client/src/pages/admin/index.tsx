@@ -151,6 +151,9 @@ export default function Admin() {
   const [showPermanentDeleteConfirm, setShowPermanentDeleteConfirm] = useState(false);
   const [permanentDeleteTargetId, setPermanentDeleteTargetId] = useState<number | null>(null);
   const [showDeleteAllTrashConfirm, setShowDeleteAllTrashConfirm] = useState(false);
+  const [showRestoreAllTrashConfirm, setShowRestoreAllTrashConfirm] = useState(false);
+  const [draggedGalleryId, setDraggedGalleryId] = useState<number | null>(null);
+  const [dragOverGalleryId, setDragOverGalleryId] = useState<number | null>(null);
 
   const { data: trashedLeads, refetch: refetchTrash } = useQuery<Lead[]>({
     queryKey: ["/api/leads/trash"],
@@ -170,7 +173,7 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leads/unseen-count"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
-      toast({ title: "הפנייה הועברה לפח" });
+      toast({ title: "הפנייה הועברה לסל המחזור" });
     },
   });
 
@@ -202,9 +205,58 @@ export default function Admin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
-      toast({ title: "כל הפניות בפח נמחקו לצמיתות" });
+      toast({ title: "כל הפניות בסל נמחקו לצמיתות" });
     },
   });
+
+  const restoreAllTrashMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/leads/trash/restore-all");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/unseen-count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leads/trash"] });
+      toast({ title: "כל הפניות שוחזרו בהצלחה" });
+    },
+  });
+
+  const galleryReorderMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      await apiRequest("POST", "/api/gallery/reorder", { ids });
+    },
+    onSuccess: () => {
+      refetchContent();
+      toast({ title: "סדר התמונות עודכן" });
+    },
+  });
+
+  const handleGalleryDragStart = (id: number) => {
+    setDraggedGalleryId(id);
+  };
+
+  const handleGalleryDragOver = (e: React.DragEvent, id: number) => {
+    e.preventDefault();
+    setDragOverGalleryId(id);
+  };
+
+  const handleGalleryDrop = (targetId: number) => {
+    if (draggedGalleryId === null || draggedGalleryId === targetId) {
+      setDraggedGalleryId(null);
+      setDragOverGalleryId(null);
+      return;
+    }
+    const images = [...content.gallery.images];
+    const dragIndex = images.findIndex(img => img.id === draggedGalleryId);
+    const targetIndex = images.findIndex(img => img.id === targetId);
+    if (dragIndex === -1 || targetIndex === -1) return;
+    const [moved] = images.splice(dragIndex, 1);
+    images.splice(targetIndex, 0, moved);
+    const newIds = images.map(img => img.id);
+    galleryReorderMutation.mutate(newIds);
+    setDraggedGalleryId(null);
+    setDragOverGalleryId(null);
+  };
 
   const handleTrashLead = (id: number) => {
     setTrashTargetId(id);
@@ -706,7 +758,7 @@ export default function Admin() {
                               <Eye size={18} />
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleTrashLead(lead.id)} title="העבר לפח" data-testid={`btn-trash-lead-${lead.id}`}>
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleTrashLead(lead.id)} title="העבר לסל מחזור" data-testid={`btn-trash-lead-${lead.id}`}>
                             <Trash2 size={18} />
                           </Button>
                         </div>
@@ -723,7 +775,7 @@ export default function Admin() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-muted-foreground text-base">
                     <Trash2 size={18} />
-                    פח אשפה
+                    סל מחזור
                     {trashedLeads && trashedLeads.length > 0 && (
                       <Badge variant="secondary" className="text-xs">{trashedLeads.length}</Badge>
                     )}
@@ -736,7 +788,11 @@ export default function Admin() {
               {showTrash && (
                 <CardContent className="space-y-4">
                   {trashedLeads && trashedLeads.length > 0 && (
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" className="gap-1 text-primary border-primary/30 hover:bg-primary/10" onClick={(e) => { e.stopPropagation(); setShowRestoreAllTrashConfirm(true); }} data-testid="btn-restore-all-trash">
+                        <UploadCloud size={14} />
+                        שחזר הכל
+                      </Button>
                       <Button variant="destructive" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setShowDeleteAllTrashConfirm(true); }} data-testid="btn-delete-all-trash">
                         <Trash2 size={14} />
                         מחק הכל
@@ -746,7 +802,7 @@ export default function Admin() {
                   {!trashedLeads || trashedLeads.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Trash2 size={36} className="mx-auto mb-3 opacity-20" />
-                      <p className="text-sm">הפח ריק</p>
+                      <p className="text-sm">סל המחזור ריק</p>
                     </div>
                   ) : (
                     trashedLeads.map((lead) => (
@@ -974,7 +1030,15 @@ export default function Admin() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {content.gallery.images.map((img) => (
-                  <Card key={img.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white">
+                  <Card
+                    key={img.id}
+                    className={`p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white transition-all ${dragOverGalleryId === img.id ? "ring-2 ring-primary/50 bg-primary/5" : ""} ${draggedGalleryId === img.id ? "opacity-50" : ""}`}
+                    draggable
+                    onDragStart={() => handleGalleryDragStart(img.id)}
+                    onDragOver={(e) => handleGalleryDragOver(e, img.id)}
+                    onDrop={() => handleGalleryDrop(img.id)}
+                    onDragEnd={() => { setDraggedGalleryId(null); setDragOverGalleryId(null); }}
+                  >
                     <div className="cursor-grab text-muted-foreground hover:text-foreground hidden sm:block">
                       <GripVertical />
                     </div>
@@ -1162,8 +1226,8 @@ export default function Admin() {
       <AlertDialog open={showDeleteAllTrashConfirm} onOpenChange={setShowDeleteAllTrashConfirm}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>מחיקת כל הפניות בפח</AlertDialogTitle>
-            <AlertDialogDescription>פעולה זו בלתי הפיכה! כל הפניות שבפח האשפה יימחקו לצמיתות ולא ניתן יהיה לשחזר אותן.</AlertDialogDescription>
+            <AlertDialogTitle>מחיקת כל הפניות בסל המחזור</AlertDialogTitle>
+            <AlertDialogDescription>פעולה זו בלתי הפיכה! כל הפניות שבסל המחזור יימחקו לצמיתות ולא ניתן יהיה לשחזר אותן.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
             <AlertDialogAction onClick={() => { deleteAllTrashMutation.mutate(); setShowDeleteAllTrashConfirm(false); }} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-delete-all-trash">כן, מחק הכל</AlertDialogAction>
@@ -1176,11 +1240,11 @@ export default function Admin() {
       <AlertDialog open={showTrashConfirm} onOpenChange={setShowTrashConfirm}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>העברה לפח אשפה</AlertDialogTitle>
-            <AlertDialogDescription>האם את בטוחה שאת רוצה להעביר את הפנייה הזו לפח? ניתן לשחזר אותה תוך 30 יום.</AlertDialogDescription>
+            <AlertDialogTitle>העברה לסל מחזור</AlertDialogTitle>
+            <AlertDialogDescription>האם את בטוחה שאת רוצה להעביר את הפנייה הזו לסל המחזור? ניתן לשחזר אותה תוך 30 יום.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
-            <AlertDialogAction onClick={confirmTrashLead} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-trash">כן, העבר לפח</AlertDialogAction>
+            <AlertDialogAction onClick={confirmTrashLead} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-trash">כן, העבר לסל</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-trash">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1196,6 +1260,20 @@ export default function Admin() {
           <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
             <AlertDialogAction onClick={confirmPermanentDelete} className="bg-destructive hover:bg-destructive/90" data-testid="btn-confirm-perm-delete">כן, מחק לצמיתות</AlertDialogAction>
             <AlertDialogCancel data-testid="btn-cancel-perm-delete">לא, בטל</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Restore all trash confirmation */}
+      <AlertDialog open={showRestoreAllTrashConfirm} onOpenChange={setShowRestoreAllTrashConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>שחזור כל הפניות</AlertDialogTitle>
+            <AlertDialogDescription>כל הפניות שבסל המחזור יוחזרו לרשימת הפניות הפעילות.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={() => { restoreAllTrashMutation.mutate(); setShowRestoreAllTrashConfirm(false); }} data-testid="btn-confirm-restore-all-trash">כן, שחזר הכל</AlertDialogAction>
+            <AlertDialogCancel data-testid="btn-cancel-restore-all-trash">לא, בטל</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
