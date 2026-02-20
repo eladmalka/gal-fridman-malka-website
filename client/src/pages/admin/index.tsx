@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { ImagePlus, Trash2, GripVertical, LogOut, Check, UploadCloud } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ImagePlus, Trash2, GripVertical, LogOut, Check, UploadCloud, Save } from "lucide-react";
 import { useContent, useRefetchContent } from "@/lib/content-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,10 +27,11 @@ export default function Admin() {
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
 
   const [localTexts, setLocalTexts] = useState<Record<string, string>>({});
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [savedTexts, setSavedTexts] = useState<Record<string, string>>({});
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
   useEffect(() => {
-    setLocalTexts({
+    const texts = {
       "hero.badge": content.hero.badge,
       "hero.titleMain": content.hero.titleMain,
       "hero.titleSub": content.hero.titleSub,
@@ -42,27 +44,49 @@ export default function Admin() {
       "gallery.title": content.gallery.title,
       "contact.title": content.contact.title,
       "contact.subtitle": content.contact.subtitle,
-    });
+    };
+    setLocalTexts(texts);
+    setSavedTexts(texts);
   }, [content]);
+
+  const hasTextChanges = Object.keys(localTexts).some(
+    key => localTexts[key] !== savedTexts[key]
+  );
 
   const textMutation = useMutation({
     mutationFn: async (entries: Record<string, string>) => {
       await apiRequest("PUT", "/api/content", entries);
     },
     onSuccess: () => {
+      setSavedTexts({ ...localTexts });
       queryClient.invalidateQueries({ queryKey: ["/api/content"] });
+      toast({ title: "השינויים נשמרו בהצלחה" });
+    },
+    onError: () => {
+      toast({ variant: "destructive", title: "שגיאה", description: "שמירת השינויים נכשלה." });
     },
   });
 
   const handleUpdateText = useCallback((key: string, value: string) => {
     setLocalTexts(prev => ({ ...prev, [key]: value }));
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+  }, []);
+
+  const handleSaveTexts = () => {
+    setShowSaveConfirm(true);
+  };
+
+  const confirmSaveTexts = () => {
+    setShowSaveConfirm(false);
+    const changedEntries: Record<string, string> = {};
+    for (const key of Object.keys(localTexts)) {
+      if (localTexts[key] !== savedTexts[key]) {
+        changedEntries[key] = localTexts[key];
+      }
     }
-    debounceTimerRef.current = setTimeout(() => {
-      textMutation.mutate({ [key]: value });
-    }, 800);
-  }, [textMutation]);
+    if (Object.keys(changedEntries).length > 0) {
+      textMutation.mutate(changedEntries);
+    }
+  };
 
   const loginMutation = useMutation({
     mutationFn: async (pw: string) => {
@@ -306,8 +330,26 @@ export default function Admin() {
           <TabsContent value="texts" className="mt-6 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>עריכת טקסטים - עמוד הבית</CardTitle>
-                <CardDescription>השינויים יישמרו וישתקפו באתר מיד.</CardDescription>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>עריכת טקסטים - עמוד הבית</CardTitle>
+                    <CardDescription>ערכי את הטקסטים ולחצי על "שמור שינויים" כשסיימת.</CardDescription>
+                  </div>
+                  <Button 
+                    onClick={handleSaveTexts} 
+                    disabled={!hasTextChanges || textMutation.isPending}
+                    className="gap-2 shrink-0"
+                    data-testid="btn-save-texts"
+                  >
+                    <Save size={16} />
+                    {textMutation.isPending ? "שומר..." : "שמור שינויים"}
+                  </Button>
+                </div>
+                {hasTextChanges && (
+                  <div className="mt-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                    יש שינויים שלא נשמרו - לחצי על "שמור שינויים" לשמירה.
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4 border-b pb-6">
@@ -515,6 +557,25 @@ export default function Admin() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <AlertDialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>שמירת שינויים</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם את בטוחה שאת רוצה לשמור את השינויים?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:flex-row-reverse">
+            <AlertDialogAction onClick={confirmSaveTexts} data-testid="btn-confirm-save">
+              כן, שמור
+            </AlertDialogAction>
+            <AlertDialogCancel data-testid="btn-cancel-save">
+              לא, בטל
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,0 +1,70 @@
+Fix the layout so that EVERYTHING is centered on the page. This is a hard requirement.
+
+Global Centering Rules (Hebrew RTL):
+1) Set a global page layout wrapper that centers all content horizontally:
+   - Use a single main container with:
+     - display: flex
+     - flex-direction: column
+     - align-items: center
+   - Apply it to the entire site (header, main, sections, footer, admin pages too if applicable).
+
+2) Text centering:
+   - All headings, paragraphs, labels, helper texts, buttons, and section titles must be center-aligned:
+     - text-align: center everywhere by default
+   - Hebrew RTL must remain correct:
+     - direction: rtl
+     - unicode-bidi: plaintext (or equivalent safe handling)
+
+3) Centering inside sections:
+   - Every section must be centered and constrained for readability:
+     - Use max-width (e.g., 980px or 1100px) and center it
+     - Even within cards/grids, the whole group must be centered
+   - If you use a grid (services/testimonials/gallery), the grid itself must be centered with:
+     - justify-items: center
+     - place-items: center (when relevant)
+   - Cards should be centered and their content centered.
+
+4) Forms must be fully centered:
+   - The entire form card centered
+   - Each input centered within the form layout (while keeping RTL text input)
+   - Buttons centered
+   - Validation and success messages centered
+
+5) Header / footer / logos:
+   - Center the logo
+   - Center nav links (if any)
+   - Center all footer content and contact links
+
+6) Gallery/images:
+   - Center the gallery container
+   - Center each image tile and any captions
+   - Ensure images keep nice proportions and don’t overflow
+
+7) Spacing & responsiveness:
+   - Centering must work perfectly on mobile and desktop
+   - Avoid awkward full-width text blocks; keep consistent padding and max widths
+   - Ensure no element is “left-aligned” or “stuck to the side” anywhere
+
+Implementation Notes:
+- Use Tailwind or CSS consistently (don’t mix randomly).
+- Provide a single “Layout” component or global CSS that enforces this everywhere.
+- After implementing, verify by scanning all major components and sections:
+  Header, Hero, Trust, Services, Benefits, Gallery, Form, Footer, Admin (/admin), and confirm center alignment in each.
+
+GitHub requirement (NEW repo, do not overwrite anything):
+- I want you to push this project to my GitHub as a BRAND NEW repository (a new project), without overwriting any existing repositories.
+- Steps required:
+  1) Initialize a new local git repository inside the project folder (git init).
+  2) Create a new repository on GitHub with a NEW unique name (do NOT reuse an existing repo name).
+  3) Add the GitHub repo as origin and push the initial commit to the default branch.
+  4) Provide the exact commands for Windows PowerShell.
+- IMPORTANT:
+  - Do not force-push to any existing repo.
+  - Do not reuse an existing remote URL.
+  - Ensure the new repo name is unique and clearly related (e.g., "gal-friedman-numerology-landing" or similar).
+  - Include a proper .gitignore (node_modules, .env, dist/.next, uploads if needed) and ensure .env is NOT committed.
+
+Deliverable:
+- Update the code so ALL elements across the entire landing page are centered visually and textually.
+- Provide the updated layout wrapper code and mention where it is applied.
+- Provide the full Git steps + commands to publish this as a new repo without overwriting anything.
