@@ -93,6 +93,7 @@ export default function Admin() {
   const [showNewLeadPopup, setShowNewLeadPopup] = useState(false);
   const [newLeadPopupData, setNewLeadPopupData] = useState<Lead | null>(null);
   const lastKnownCountRef = useRef<number | null>(null);
+  const knownLeadIdsRef = useRef<Set<number> | null>(null);
 
   const { data: leadsData, refetch: refetchLeads } = useQuery<Lead[]>({
     queryKey: ["/api/leads"],
@@ -119,20 +120,23 @@ export default function Admin() {
   const unseenCount = unseenData?.count ?? 0;
 
   useEffect(() => {
-    if (lastKnownCountRef.current === null) {
+    if (!leadsData || leadsData.length === 0) return;
+    const currentIds = new Set(leadsData.map(l => l.id));
+    if (knownLeadIdsRef.current === null) {
+      knownLeadIdsRef.current = currentIds;
       lastKnownCountRef.current = unseenCount;
       return;
     }
-    if (unseenCount > lastKnownCountRef.current && leadsData && leadsData.length > 0) {
-      const newest = leadsData.find(l => !l.seen);
-      if (newest) {
-        setNewLeadPopupData(newest);
-        setShowNewLeadPopup(true);
-        playNotificationSound();
-      }
+    const newLeads = leadsData.filter(l => !knownLeadIdsRef.current!.has(l.id));
+    if (newLeads.length > 0) {
+      const newest = newLeads[0];
+      setNewLeadPopupData(newest);
+      setShowNewLeadPopup(true);
+      playNotificationSound();
     }
+    knownLeadIdsRef.current = currentIds;
     lastKnownCountRef.current = unseenCount;
-  }, [unseenCount, leadsData]);
+  }, [leadsData, unseenCount]);
 
   const markSeenMutation = useMutation({
     mutationFn: async (ids: number[]) => {
