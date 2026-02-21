@@ -15,6 +15,8 @@ export const imageSlots = pgTable("image_slots", {
   filePath: text("file_path"),
   alt: text("alt").notNull().default(""),
   aspectRatioLabel: text("aspect_ratio_label").notNull().default(""),
+  positionX: integer("position_x").notNull().default(50),
+  positionY: integer("position_y").notNull().default(50),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

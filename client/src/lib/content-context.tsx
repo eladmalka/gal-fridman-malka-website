@@ -8,6 +8,8 @@ export type ImageSlot = {
   url: string;
   alt: string;
   aspectRatioLabel: string;
+  positionX: number;
+  positionY: number;
 };
 
 export type ContentState = {
@@ -140,16 +142,16 @@ const defaultContent: ContentState = {
     subtitle: "השאירי פרטים לשיחת היכרות קצרה ללא עלות",
   },
   images: {
-    HERO_BACKGROUND: { url: img3, alt: "רקע קליניקה נומרולוגיה", aspectRatioLabel: "16:9 (מומלץ 1920x1080)" },
-    BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)" },
-    ABOUT_IMAGE: { url: "/uploads/about_profile.jpg", alt: "גל פרידמן מלכה", aspectRatioLabel: "1:1 עגול (מומלץ 400x400)" }
+    HERO_BACKGROUND: { url: img3, alt: "רקע קליניקה נומרולוגיה", aspectRatioLabel: "16:9 (מומלץ 1920x1080)", positionX: 50, positionY: 50 },
+    BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)", positionX: 50, positionY: 50 },
+    ABOUT_IMAGE: { url: "/uploads/about_profile.jpg", alt: "גל פרידמן מלכה", aspectRatioLabel: "1:1 עגול (מומלץ 400x400)", positionX: 50, positionY: 25 }
   }
 };
 
-const defaultImageSlots: Record<string, { url: string; alt: string; aspectRatioLabel: string }> = {
-  HERO_BACKGROUND: { url: img3, alt: "רקע קליניקה נומרולוגיה", aspectRatioLabel: "16:9 (מומלץ 1920x1080)" },
-  BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)" },
-  ABOUT_IMAGE: { url: "/uploads/about_profile.jpg", alt: "גל פרידמן מלכה", aspectRatioLabel: "1:1 עגול (מומלץ 400x400)" }
+const defaultImageSlots: Record<string, ImageSlot> = {
+  HERO_BACKGROUND: { url: img3, alt: "רקע קליניקה נומרולוגיה", aspectRatioLabel: "16:9 (מומלץ 1920x1080)", positionX: 50, positionY: 50 },
+  BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)", positionX: 50, positionY: 50 },
+  ABOUT_IMAGE: { url: "/uploads/about_profile.jpg", alt: "גל פרידמן מלכה", aspectRatioLabel: "1:1 עגול (מומלץ 400x400)", positionX: 50, positionY: 25 }
 };
 
 const defaultGalleryImages = [
@@ -160,7 +162,7 @@ const defaultGalleryImages = [
 
 function buildContentState(
   textMap: Record<string, string> | undefined,
-  imageSlots: Array<{ id: number; slotKey: string; filePath: string | null; alt: string; aspectRatioLabel: string }> | undefined,
+  imageSlots: Array<{ id: number; slotKey: string; filePath: string | null; alt: string; aspectRatioLabel: string; positionX: number; positionY: number }> | undefined,
   galleryImages: Array<{ id: number; filePath: string; alt: string; sortOrder: number }> | undefined
 ): ContentState {
   const t = (key: string, fallback: string) => textMap?.[key] ?? fallback;
@@ -172,6 +174,8 @@ function buildContentState(
         url: slot.filePath || defaultImageSlots[slot.slotKey]?.url || img3,
         alt: slot.alt || defaultImageSlots[slot.slotKey]?.alt || "",
         aspectRatioLabel: slot.aspectRatioLabel || defaultImageSlots[slot.slotKey]?.aspectRatioLabel || "",
+        positionX: slot.positionX ?? defaultImageSlots[slot.slotKey]?.positionX ?? 50,
+        positionY: slot.positionY ?? defaultImageSlots[slot.slotKey]?.positionY ?? 50,
       };
     }
   }

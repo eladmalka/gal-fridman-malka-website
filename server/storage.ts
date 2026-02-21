@@ -31,6 +31,7 @@ export interface IStorage {
   upsertImageSlot(slotKey: string, filePath: string | null, alt: string, aspectRatioLabel: string): Promise<ImageSlot>;
   updateImageSlotFile(slotKey: string, filePath: string): Promise<void>;
   updateImageSlotAlt(slotKey: string, alt: string): Promise<void>;
+  updateImageSlotPosition(slotKey: string, positionX: number, positionY: number): Promise<void>;
 
   getAllGalleryImages(): Promise<GalleryImage[]>;
   addGalleryImage(filePath: string, alt: string, sortOrder: number): Promise<GalleryImage>;
@@ -101,6 +102,10 @@ export class DatabaseStorage implements IStorage {
 
   async updateImageSlotAlt(slotKey: string, alt: string): Promise<void> {
     await db.update(imageSlots).set({ alt, updatedAt: new Date() }).where(eq(imageSlots.slotKey, slotKey));
+  }
+
+  async updateImageSlotPosition(slotKey: string, positionX: number, positionY: number): Promise<void> {
+    await db.update(imageSlots).set({ positionX, positionY, updatedAt: new Date() }).where(eq(imageSlots.slotKey, slotKey));
   }
 
   async getAllGalleryImages(): Promise<GalleryImage[]> {

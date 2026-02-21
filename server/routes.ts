@@ -194,10 +194,13 @@ export async function registerRoutes(
   app.put("/api/image-slots/:slotKey", async (req, res) => {
     try {
       const { slotKey } = req.params;
-      const { alt, aspectRatioLabel } = req.body;
+      const { alt, aspectRatioLabel, positionX, positionY } = req.body;
       const existing = await storage.getImageSlot(slotKey);
       if (existing) {
         if (alt !== undefined) await storage.updateImageSlotAlt(slotKey, alt);
+        if (positionX !== undefined && positionY !== undefined) {
+          await storage.updateImageSlotPosition(slotKey, positionX, positionY);
+        }
       } else {
         await storage.upsertImageSlot(slotKey, null, alt || "", aspectRatioLabel || "");
       }
