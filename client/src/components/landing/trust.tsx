@@ -26,7 +26,7 @@ export function Trust() {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-card">
       <div className="container px-4">
         {/* Value Strip */}
         <div className="flex flex-wrap justify-center gap-8 md:gap-16 mb-20 pb-10 border-b border-border/50">

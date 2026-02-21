@@ -5,7 +5,7 @@ export function About() {
   const aboutImage = content.images.ABOUT_IMAGE;
 
   return (
-    <section id="about" className="py-24 bg-gradient-to-b from-white to-[#fdf6f4]">
+    <section id="about" className="py-24 bg-gradient-to-b from-card to-secondary">
       <div className="container px-4 max-w-3xl mx-auto">
         <h2 className="text-3xl md:text-5xl font-black mb-10 text-center" data-testid="text-about-title">
           {content.about.title}
@@ -22,7 +22,7 @@ export function About() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-border/30 p-8 md:p-12" data-testid="text-about-content">
+        <div className="bg-card rounded-2xl shadow-sm border border-border/30 p-8 md:p-12" data-testid="text-about-content">
           {content.about.content.split("\n").map((line, i) => {
             if (line.trim() === "") return <div key={i} className="h-4" />;
             const isQuestion = line.endsWith("?") || line.startsWith("למה");

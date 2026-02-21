@@ -69,7 +69,7 @@ export function Contact() {
   }
 
   return (
-    <section id="contact" className="py-24 bg-white flex justify-center">
+    <section id="contact" className="py-24 bg-card flex justify-center">
       <div className="container px-4 max-w-2xl mx-auto w-full">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-black mb-4">{content.contact.title}</h2>
@@ -89,7 +89,7 @@ export function Contact() {
                     <FormItem>
                       <FormLabel>שם מלא</FormLabel>
                       <FormControl>
-                        <Input placeholder="שם מלא" {...field} className="h-12 bg-white text-right" data-testid="input-name" />
+                        <Input placeholder="שם מלא" {...field} className="h-12 bg-background text-right" data-testid="input-name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -102,7 +102,7 @@ export function Contact() {
                     <FormItem>
                       <FormLabel>טלפון</FormLabel>
                       <FormControl>
-                        <Input placeholder="05x-xxxxxxx" {...field} className="h-12 bg-white text-right" dir="ltr" data-testid="input-phone" />
+                        <Input placeholder="05x-xxxxxxx" {...field} className="h-12 bg-background text-right" dir="ltr" data-testid="input-phone" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -117,7 +117,7 @@ export function Contact() {
                   <FormItem>
                     <FormLabel>אימייל</FormLabel>
                     <FormControl>
-                      <Input placeholder="your@email.com" {...field} className="h-12 bg-white text-right" dir="ltr" data-testid="input-email" />
+                      <Input placeholder="your@email.com" {...field} className="h-12 bg-background text-right" dir="ltr" data-testid="input-email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -132,7 +132,7 @@ export function Contact() {
                     <FormLabel>סטטוס זוגי</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-12 bg-white" data-testid="select-status" dir="rtl">
+                        <SelectTrigger className="h-12 bg-background" data-testid="select-status" dir="rtl">
                           <SelectValue placeholder="בחרי סטטוס" />
                         </SelectTrigger>
                       </FormControl>
@@ -157,7 +157,7 @@ export function Contact() {
                     <FormControl>
                       <Textarea 
                         placeholder="כמה מילים על מה שהביא אותך לכאן..." 
-                        className="resize-none h-32 bg-white text-right" 
+                        className="resize-none h-32 bg-background text-right" 
                         {...field} 
                         data-testid="textarea-goals"
                       />
@@ -194,7 +194,7 @@ export function Contact() {
                 control={form.control}
                 name="agree"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start gap-3 space-y-0 rounded-md p-4 bg-white/50 border border-border/50">
+                  <FormItem className="flex flex-row items-start gap-3 space-y-0 rounded-md p-4 bg-background/50 border border-border/50">
                     <FormControl>
                       <Checkbox
                         checked={field.value}

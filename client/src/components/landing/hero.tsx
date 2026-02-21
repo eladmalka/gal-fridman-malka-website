@@ -43,7 +43,7 @@ export function Hero() {
           <Button 
             variant="outline" 
             size="lg" 
-            className="text-lg px-8 rounded-full h-14 bg-white/50 backdrop-blur hover:bg-white"
+            className="text-lg px-8 rounded-full h-14 bg-card/50 backdrop-blur hover:bg-card"
             asChild
             data-testid="btn-hero-whatsapp"
           >

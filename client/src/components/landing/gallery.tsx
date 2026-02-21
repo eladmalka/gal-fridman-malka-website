@@ -12,8 +12,8 @@ export function Gallery() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {content.gallery.images.map((img, i) => (
             <div key={i} className="aspect-square rounded-2xl overflow-hidden shadow-md group relative">
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-end p-4">
-                <span className="text-white font-medium drop-shadow-md">{img.alt}</span>
+              <div className="absolute inset-0 bg-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-end p-4">
+                <span className="text-background font-medium drop-shadow-md">{img.alt}</span>
               </div>
               <img 
                 src={img.url} 

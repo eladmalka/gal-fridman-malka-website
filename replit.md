@@ -6,6 +6,7 @@ This is a Hebrew (RTL) landing page for **גל פרידמן מלכה** (Gal Frid
 
 Key features:
 - **Public landing page** with Hero, Trust/Testimonials, Services, Benefits, Gallery, Contact form, and Footer sections — all in Hebrew RTL
+- **Automatic dark/light mode** based on visitor's system preference (`prefers-color-scheme` media query)
 - **Admin panel** (`/admin`) for managing image slots, gallery images, and viewing leads
 - **Lead capture form** that sends emails via Gmail/Nodemailer to `galfridman21@gmail.com`
 - **WhatsApp integration** with a floating button and hero CTA linking to `+972523491792`

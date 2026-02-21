@@ -3,7 +3,7 @@ import { useContent } from "@/lib/content-context";
 export function Benefits() {
   const { content } = useContent();
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-card">
       <div className="container px-4">
         <div className="max-w-4xl mx-auto text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">{content.benefits.title}</h2>

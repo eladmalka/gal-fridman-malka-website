@@ -20,7 +20,7 @@ export function Services() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {content.services.cards.map((s, i) => (
-            <Card key={i} className="bg-white border-border/40 shadow-lg shadow-primary/5 overflow-hidden group hover:-translate-y-1 transition-all duration-300" data-testid={`service-${i}`}>
+            <Card key={i} className="bg-card border-border/40 shadow-lg shadow-primary/5 overflow-hidden group hover:-translate-y-1 transition-all duration-300" data-testid={`service-${i}`}>
               <div className="h-2 bg-gradient-to-l from-primary/60 to-primary/20"></div>
               <CardHeader className="text-center pb-4 pt-8">
                 <CardTitle className="text-2xl font-bold text-foreground mb-2">{s.title}</CardTitle>
