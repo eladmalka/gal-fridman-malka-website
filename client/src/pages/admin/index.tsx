@@ -14,7 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Lead } from "@shared/schema";
 
-const MAX_GALLERY_IMAGES = 5;
+const MAX_GALLERY_IMAGES = 6;
 const statusLabels: Record<string, string> = {
   married: "נשואה",
   relationship: "בזוגיות",
@@ -979,6 +979,17 @@ export default function Admin() {
                   <div className="space-y-2">
                     <Label>תיאור</Label>
                     <Textarea value={localTexts["hero.description"] ?? ""} onChange={(e) => handleUpdateText('hero.description', e.target.value)} className="h-24 resize-none" />
+                  </div>
+                </div>
+                <div className="space-y-4 border-b pb-6">
+                  <h3 className="font-bold text-lg text-primary">מי אני?</h3>
+                  <div className="space-y-2">
+                    <Label>כותרת</Label>
+                    <Input value={localTexts["about.title"] ?? ""} onChange={(e) => handleUpdateText('about.title', e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>תוכן</Label>
+                    <Textarea value={localTexts["about.content"] ?? ""} onChange={(e) => handleUpdateText('about.content', e.target.value)} className="h-64 resize-y" />
                   </div>
                 </div>
                 <div className="space-y-4 border-b pb-6">

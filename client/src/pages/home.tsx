@@ -1,4 +1,5 @@
 import { Hero } from "@/components/landing/hero";
+import { About } from "@/components/landing/about";
 import { Trust } from "@/components/landing/trust";
 import { Services } from "@/components/landing/services";
 import { Benefits } from "@/components/landing/benefits";
@@ -11,6 +12,7 @@ export default function Home() {
   return (
     <main className="min-h-screen font-sans bg-background selection:bg-primary/20 selection:text-primary">
       <Hero />
+      <About />
       <Trust />
       <Services />
       <Benefits />

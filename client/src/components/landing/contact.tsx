@@ -39,6 +39,7 @@ export function Contact() {
       name: "",
       phone: "",
       email: "",
+      status: "",
       goals: "",
       contactMethod: undefined as unknown as "phone" | "whatsapp",
       agree: false,
