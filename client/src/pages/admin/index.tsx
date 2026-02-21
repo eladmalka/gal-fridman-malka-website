@@ -1192,6 +1192,27 @@ export default function Admin() {
                             />
                           </div>
                         </div>
+                        {(pos.x !== (savedSlotPositions[key]?.x ?? 50) || pos.y !== (savedSlotPositions[key]?.y ?? 50)) && (
+                          <div className="max-w-md mx-auto">
+                            <Button
+                              size="sm"
+                              className="w-full"
+                              onClick={async () => {
+                                try {
+                                  await apiRequest("PUT", `/api/image-slots/${key}`, { positionX: pos.x, positionY: pos.y });
+                                  setSavedSlotPositions(prev => ({ ...prev, [key]: { x: pos.x, y: pos.y } }));
+                                  refetchContent();
+                                  toast({ title: "מיקום המוקד נשמר בהצלחה" });
+                                } catch {
+                                  toast({ variant: "destructive", title: "שגיאה", description: "שמירת המיקום נכשלה." });
+                                }
+                              }}
+                            >
+                              <Save size={14} className="ml-2" />
+                              שמור מיקום מוקד
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-1">
