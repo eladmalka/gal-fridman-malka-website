@@ -58,6 +58,9 @@ export default function Admin() {
   const { toast } = useToast();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState("");
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -492,21 +495,58 @@ export default function Admin() {
     }
   };
 
+  useEffect(() => {
+    if (!lockoutUntil) return;
+    const tick = () => {
+      const remaining = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setLockoutUntil(null);
+        setLockoutSeconds(0);
+        setFailedAttempts(0);
+      } else {
+        setLockoutSeconds(remaining);
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutUntil]);
+
+  const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil;
+
   const loginMutation = useMutation({
     mutationFn: async (pw: string) => {
-      await apiRequest("POST", "/api/admin/login", { password: pw });
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw { status: res.status, ...data };
+      return data;
     },
     onSuccess: () => {
       setIsLoggedIn(true);
       setPassword("");
+      setFailedAttempts(0);
+      setLockoutUntil(null);
     },
-    onError: () => {
-      toast({ variant: "destructive", title: "שגיאה", description: "סיסמה שגויה." });
+    onError: (error: any) => {
+      if (error.status === 429 && error.remainingSeconds) {
+        setLockoutUntil(Date.now() + error.remainingSeconds * 1000);
+        setFailedAttempts(3);
+        toast({ variant: "destructive", title: "נחסמת", description: `3 ניסיונות שגויים. יש להמתין ${error.remainingSeconds} שניות.` });
+      } else {
+        const attemptsLeft = error.attemptsLeft ?? 0;
+        setFailedAttempts(3 - attemptsLeft);
+        toast({ variant: "destructive", title: "שגיאה", description: `סיסמה שגויה. נותרו ${attemptsLeft} ניסיונות.` });
+      }
     },
   });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLockedOut) return;
     loginMutation.mutate(password);
   };
 
@@ -702,10 +742,16 @@ export default function Admin() {
                 onChange={(e) => setPassword(e.target.value)}
                 dir="ltr"
                 className="bg-white"
+                disabled={isLockedOut}
                 data-testid="input-admin-password"
               />
-              <Button type="submit" className="w-full" data-testid="btn-admin-login" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? "מתחבר..." : "היכנס"}
+              {isLockedOut && (
+                <p className="text-sm text-destructive text-center font-medium" data-testid="text-lockout-timer">
+                  יש להמתין {lockoutSeconds} שניות לפני ניסיון נוסף
+                </p>
+              )}
+              <Button type="submit" className="w-full" data-testid="btn-admin-login" disabled={loginMutation.isPending || isLockedOut}>
+                {isLockedOut ? `נחסם (${lockoutSeconds} שניות)` : loginMutation.isPending ? "מתחבר..." : "היכנס"}
               </Button>
             </form>
           </CardContent>

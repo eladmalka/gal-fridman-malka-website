@@ -64,7 +64,7 @@ async function sendLeadEmail(lead: { name: string; phone: string; email: string;
 
     const actionButton = lead.contactMethod === "whatsapp"
       ? `<a href="${whatsappLink}" style="display: inline-block; background-color: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">שלחי הודעת וואטסאפ ל${lead.name}</a>`
-      : `<a href="tel:${lead.phone}" style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">התקשרי ל${lead.name} ${lead.phone}</a>`;
+      : `<a href="tel:${lead.phone}" style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">התקשרי ל${lead.name}</a>`;
 
     await transporter.sendMail({
       from: `"אתר גל פרידמן מלכה" <${process.env.GMAIL_USER}>`,
@@ -389,14 +389,29 @@ export async function registerRoutes(
     }
   });
 
+  let loginFailedAttempts = 0;
+  let loginLockoutUntil: number | null = null;
+
   app.post("/api/admin/login", async (req, res) => {
     try {
+      if (loginLockoutUntil && Date.now() < loginLockoutUntil) {
+        const remainingSeconds = Math.ceil((loginLockoutUntil - Date.now()) / 1000);
+        return res.status(429).json({ message: "Too many attempts", remainingSeconds });
+      }
       const { password } = req.body;
       const valid = await storage.verifyAdminPassword(password);
       if (valid) {
+        loginFailedAttempts = 0;
+        loginLockoutUntil = null;
         res.json({ success: true });
       } else {
-        res.status(401).json({ message: "Incorrect password" });
+        loginFailedAttempts++;
+        if (loginFailedAttempts >= 3) {
+          loginLockoutUntil = Date.now() + 60000;
+          const remainingSeconds = 60;
+          return res.status(429).json({ message: "Too many attempts", remainingSeconds });
+        }
+        res.status(401).json({ message: "Incorrect password", attemptsLeft: 3 - loginFailedAttempts });
       }
     } catch (error) {
       res.status(500).json({ message: "Login failed" });
