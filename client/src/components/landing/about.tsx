@@ -16,7 +16,7 @@ export function About() {
             <img
               src={aboutImage?.url || "/uploads/about_profile.jpg"}
               alt={aboutImage?.alt || "גל פרידמן מלכה"}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
             />
           </div>
         </div>

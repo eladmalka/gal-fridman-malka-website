@@ -348,6 +348,8 @@ export default function Admin() {
       "hero.titleMain": content.hero.titleMain,
       "hero.titleSub": content.hero.titleSub,
       "hero.description": content.hero.description,
+      "about.title": content.about.title,
+      "about.content": content.about.content,
       "trust.testimonialsTitle": content.trust.testimonialsTitle,
       "services.title": content.services.title,
       "services.description": content.services.description,
