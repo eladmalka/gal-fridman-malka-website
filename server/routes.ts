@@ -59,7 +59,12 @@ async function sendLeadEmail(lead: { name: string; phone: string; email: string;
     });
 
     const phoneForWhatsApp = lead.phone.replace(/^0/, "972").replace(/[^0-9]/g, "");
-    const whatsappLink = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(`היי ${lead.name}, קיבלתי את הפנייה שלך דרך האתר. אשמח לדבר!`)}`;
+    const whatsappMessage = `היי ${lead.name}! זאת גל פרידמן מלכה הנומרולוגית ויועצת זוגית :)\nקיבלתי את הפנייה שלך דרך האתר, אשמח שנדבר. האם זה זמן מתאים?`;
+    const whatsappLink = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(whatsappMessage)}`;
+
+    const actionButton = lead.contactMethod === "whatsapp"
+      ? `<a href="${whatsappLink}" style="display: inline-block; background-color: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">שלחי הודעת וואטסאפ ל${lead.name}</a>`
+      : `<a href="tel:${lead.phone}" style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">התקשרי ל${lead.name} ${lead.phone}</a>`;
 
     await transporter.sendMail({
       from: `"אתר גל פרידמן מלכה" <${process.env.GMAIL_USER}>`,
@@ -77,7 +82,7 @@ async function sendLeadEmail(lead: { name: string; phone: string; email: string;
             <tr><td style="padding: 8px; font-weight: bold;">מה רוצה לשפר:</td><td style="padding: 8px;">${lead.goals}</td></tr>
           </table>
           <div style="margin-top: 20px; text-align: center;">
-            <a href="${whatsappLink}" style="display: inline-block; background-color: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">שלחי הודעת וואטסאפ ל${lead.name}</a>
+            ${actionButton}
           </div>
         </div>
       `,

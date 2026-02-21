@@ -1329,7 +1329,7 @@ export default function Admin() {
         <AlertDialogContent dir="rtl" className="max-w-lg text-center">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-center">הגלריה מלאה - בחרי תמונה להחלפה</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-center">
               יש כבר {MAX_GALLERY_IMAGES} תמונות בגלריה. בחרי איזו תמונה להחליף בתמונה החדשה:
             </AlertDialogDescription>
           </AlertDialogHeader>
