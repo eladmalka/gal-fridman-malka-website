@@ -7,10 +7,12 @@ import { Gallery } from "@/components/landing/gallery";
 import { Contact } from "@/components/landing/contact";
 import { Footer } from "@/components/landing/footer";
 import { FloatingWhatsApp } from "@/components/floating-whatsapp";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
   return (
     <main className="min-h-screen font-sans bg-background selection:bg-primary/20 selection:text-primary">
+      <ThemeToggle />
       <Hero />
       <About />
       <Trust />
