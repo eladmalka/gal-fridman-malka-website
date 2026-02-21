@@ -27,7 +27,7 @@ export function Benefits() {
           
           <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
             <div className="absolute inset-0 bg-primary/10 z-10 mix-blend-multiply"></div>
-            <img src={content.images.BENEFITS_IMAGE.url} alt={content.images.BENEFITS_IMAGE.alt} className="w-full h-full object-cover" />
+            <img src={content.images.BENEFITS_IMAGE.url} alt={content.images.BENEFITS_IMAGE.alt} className="w-full h-full object-cover" style={{ objectPosition: `${content.images.BENEFITS_IMAGE.positionX}% ${content.images.BENEFITS_IMAGE.positionY}%` }} />
           </div>
         </div>
       </div>

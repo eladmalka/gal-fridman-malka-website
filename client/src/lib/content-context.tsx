@@ -246,7 +246,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/content"],
   });
 
-  const { data: imageSlots, isLoading: slotsLoading } = useQuery<Array<{ id: number; slotKey: string; filePath: string | null; alt: string; aspectRatioLabel: string }>>({
+  const { data: imageSlots, isLoading: slotsLoading } = useQuery<Array<{ id: number; slotKey: string; filePath: string | null; alt: string; aspectRatioLabel: string; positionX: number; positionY: number }>>({
     queryKey: ["/api/image-slots"],
   });
 

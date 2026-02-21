@@ -15,6 +15,7 @@ export function Hero() {
           src={content.images.HERO_BACKGROUND.url} 
           alt={content.images.HERO_BACKGROUND.alt} 
           className="w-full h-full object-cover"
+          style={{ objectPosition: `${content.images.HERO_BACKGROUND.positionX}% ${content.images.HERO_BACKGROUND.positionY}%` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
       </div>

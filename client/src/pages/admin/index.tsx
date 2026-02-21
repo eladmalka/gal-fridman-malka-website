@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { ImagePlus, Trash2, GripVertical, LogOut, UploadCloud, Save, Bell, BellRing, User, Phone, Mail, Target, Heart, Eye, X, MessageCircle } from "lucide-react";
+import { ImagePlus, Trash2, GripVertical, LogOut, UploadCloud, Save, Bell, BellRing, User, Phone, Mail, Target, Heart, Eye, X, MessageCircle, Crosshair, Move } from "lucide-react";
 import { useContent, useRefetchContent } from "@/lib/content-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -91,6 +91,8 @@ export default function Admin() {
 
   const [localSlotAlts, setLocalSlotAlts] = useState<Record<string, string>>({});
   const [savedSlotAlts, setSavedSlotAlts] = useState<Record<string, string>>({});
+  const [localSlotPositions, setLocalSlotPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [savedSlotPositions, setSavedSlotPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [showSlotSaveConfirm, setShowSlotSaveConfirm] = useState(false);
 
   const [showNewLeadPopup, setShowNewLeadPopup] = useState(false);
@@ -385,11 +387,15 @@ export default function Admin() {
 
   useEffect(() => {
     const alts: Record<string, string> = {};
+    const positions: Record<string, { x: number; y: number }> = {};
     for (const [key, slot] of Object.entries(content.images)) {
       alts[key] = slot.alt;
+      positions[key] = { x: slot.positionX, y: slot.positionY };
     }
     setLocalSlotAlts(alts);
     setSavedSlotAlts(alts);
+    setLocalSlotPositions(positions);
+    setSavedSlotPositions(positions);
   }, [content.images]);
 
   const hasTextChanges = Object.keys(localTexts).some(
@@ -402,6 +408,8 @@ export default function Admin() {
 
   const hasSlotAltChanges = Object.keys(localSlotAlts).some(
     key => localSlotAlts[key] !== savedSlotAlts[key]
+  ) || Object.keys(localSlotPositions).some(
+    key => localSlotPositions[key]?.x !== savedSlotPositions[key]?.x || localSlotPositions[key]?.y !== savedSlotPositions[key]?.y
   );
 
   const textMutation = useMutation({
@@ -468,28 +476,38 @@ export default function Admin() {
   };
 
   const slotAltSaveMutation = useMutation({
-    mutationFn: async (entries: { slotKey: string; alt: string }[]) => {
+    mutationFn: async (entries: { slotKey: string; alt?: string; positionX?: number; positionY?: number }[]) => {
       for (const entry of entries) {
-        await apiRequest("PUT", `/api/image-slots/${entry.slotKey}`, { alt: entry.alt });
+        await apiRequest("PUT", `/api/image-slots/${entry.slotKey}`, {
+          ...(entry.alt !== undefined ? { alt: entry.alt } : {}),
+          ...(entry.positionX !== undefined ? { positionX: entry.positionX, positionY: entry.positionY } : {}),
+        });
       }
     },
     onSuccess: () => {
       setSavedSlotAlts({ ...localSlotAlts });
+      setSavedSlotPositions({ ...localSlotPositions });
       refetchContent();
-      toast({ title: "תיאורי התמונות נשמרו בהצלחה" });
+      toast({ title: "הגדרות התמונות נשמרו בהצלחה" });
     },
     onError: () => {
-      toast({ variant: "destructive", title: "שגיאה", description: "שמירת התיאורים נכשלה." });
+      toast({ variant: "destructive", title: "שגיאה", description: "שמירת ההגדרות נכשלה." });
     },
   });
 
   const handleSaveSlotAlts = () => { setShowSlotSaveConfirm(true); };
   const confirmSaveSlotAlts = () => {
     setShowSlotSaveConfirm(false);
-    const changed: { slotKey: string; alt: string }[] = [];
+    const changed: { slotKey: string; alt?: string; positionX?: number; positionY?: number }[] = [];
     for (const key of Object.keys(localSlotAlts)) {
-      if (localSlotAlts[key] !== savedSlotAlts[key]) {
-        changed.push({ slotKey: key, alt: localSlotAlts[key] });
+      const altChanged = localSlotAlts[key] !== savedSlotAlts[key];
+      const posChanged = localSlotPositions[key]?.x !== savedSlotPositions[key]?.x || localSlotPositions[key]?.y !== savedSlotPositions[key]?.y;
+      if (altChanged || posChanged) {
+        changed.push({
+          slotKey: key,
+          ...(altChanged ? { alt: localSlotAlts[key] } : {}),
+          ...(posChanged ? { positionX: localSlotPositions[key].x, positionY: localSlotPositions[key].y } : {}),
+        });
       }
     }
     if (changed.length > 0) {
@@ -1093,26 +1111,89 @@ export default function Admin() {
                 </div>
                 {hasSlotAltChanges && (
                   <div className="mt-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                    יש שינויים בתיאורים שלא נשמרו - לחצי על "שמור שינויים" לשמירה.
+                    יש שינויים שלא נשמרו - לחצי על "שמור שינויים" לשמירה.
                   </div>
                 )}
               </CardHeader>
               <CardContent className="space-y-6">
-                {Object.entries(content.images).map(([key, slot]) => (
-                  <Card key={key} className="p-4 flex flex-col md:flex-row items-start md:items-center gap-6 bg-background border-border/50">
-                    <div className="relative group w-32 h-32 rounded-lg overflow-hidden shrink-0 bg-secondary flex items-center justify-center">
-                      <img src={slot.url} alt={slot.alt} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button size="sm" variant="secondary" onClick={() => triggerUpload(key)}>החלף</Button>
+                {Object.entries(content.images).map(([key, slot]) => {
+                  const pos = localSlotPositions[key] ?? { x: 50, y: 50 };
+                  const slotLabels: Record<string, string> = {
+                    HERO_BACKGROUND: "תמונת רקע ראשית",
+                    BENEFITS_IMAGE: "תמונת יתרונות",
+                    ABOUT_IMAGE: "תמונת פרופיל - מי אני",
+                  };
+                  return (
+                    <Card key={key} className="p-4 space-y-4 bg-background border-border/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-lg">{slotLabels[key] || key}</h4>
+                          <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-md inline-block mt-1">
+                            יחס אידאלי: {slot.aspectRatioLabel}
+                          </span>
+                        </div>
+                        <Button className="gap-2" onClick={() => triggerUpload(key)}>
+                          <UploadCloud size={16} />
+                          החלף תמונה
+                        </Button>
                       </div>
-                    </div>
-                    <div className="flex-grow space-y-4 w-full">
-                      <div>
-                        <h4 className="font-bold text-lg">{key}</h4>
-                        <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-md inline-block mt-1">
-                          יחס אידאלי: {slot.aspectRatioLabel}
-                        </span>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <Move size={14} />
+                          מיקום מוקד התמונה - לחצי על התמונה לבחירת נקודת המוקד
+                        </Label>
+                        <div
+                          className="relative w-full max-w-md mx-auto aspect-[4/3] rounded-lg overflow-hidden cursor-crosshair border-2 border-dashed border-primary/30 bg-secondary"
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                            const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                            setLocalSlotPositions(prev => ({ ...prev, [key]: { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } }));
+                          }}
+                        >
+                          <img
+                            src={slot.url}
+                            alt={slot.alt}
+                            className="w-full h-full object-cover pointer-events-none"
+                          />
+                          <div
+                            className="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                            style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                          >
+                            <div className="absolute inset-0 rounded-full border-2 border-white shadow-lg" />
+                            <Crosshair className="w-full h-full text-white drop-shadow-lg" />
+                          </div>
+                          <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-xs text-center py-1">
+                            מיקום: {pos.x}% רוחב, {pos.y}% גובה
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 max-w-md mx-auto">
+                          <div className="flex-1 space-y-1">
+                            <Label className="text-xs text-muted-foreground">רוחב ({pos.x}%)</Label>
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              value={pos.x}
+                              onChange={(e) => setLocalSlotPositions(prev => ({ ...prev, [key]: { ...prev[key], x: Number(e.target.value) } }))}
+                              className="w-full accent-primary"
+                            />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <Label className="text-xs text-muted-foreground">גובה ({pos.y}%)</Label>
+                            <input
+                              type="range"
+                              min={0}
+                              max={100}
+                              value={pos.y}
+                              onChange={(e) => setLocalSlotPositions(prev => ({ ...prev, [key]: { ...prev[key], y: Number(e.target.value) } }))}
+                              className="w-full accent-primary"
+                            />
+                          </div>
+                        </div>
                       </div>
+
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">טקסט חלופי (Alt)</Label>
                         <Input
@@ -1122,15 +1203,9 @@ export default function Admin() {
                           className="bg-white"
                         />
                       </div>
-                    </div>
-                    <div className="w-full md:w-auto mt-2 md:mt-0 flex md:block">
-                      <Button className="w-full md:w-auto gap-2" onClick={() => triggerUpload(key)}>
-                        <UploadCloud size={16} />
-                        העלה חדש
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </CardContent>
             </Card>
           </TabsContent>
