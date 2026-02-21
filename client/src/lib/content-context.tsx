@@ -141,13 +141,15 @@ const defaultContent: ContentState = {
   },
   images: {
     HERO_BACKGROUND: { url: img3, alt: "רקע קליניקה נומרולוגיה", aspectRatioLabel: "16:9 (מומלץ 1920x1080)" },
-    BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)" }
+    BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)" },
+    ABOUT_IMAGE: { url: "/uploads/about_profile.jpg", alt: "גל פרידמן מלכה", aspectRatioLabel: "1:1 עגול (מומלץ 400x400)" }
   }
 };
 
 const defaultImageSlots: Record<string, { url: string; alt: string; aspectRatioLabel: string }> = {
   HERO_BACKGROUND: { url: img3, alt: "רקע קליניקה נומרולוגיה", aspectRatioLabel: "16:9 (מומלץ 1920x1080)" },
-  BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)" }
+  BENEFITS_IMAGE: { url: img1, alt: "קליניקה ואווירה", aspectRatioLabel: "3:4 אופקי (מומלץ 800x1000)" },
+  ABOUT_IMAGE: { url: "/uploads/about_profile.jpg", alt: "גל פרידמן מלכה", aspectRatioLabel: "1:1 עגול (מומלץ 400x400)" }
 };
 
 const defaultGalleryImages = [
