@@ -17,7 +17,7 @@ export function About() {
               src={aboutImage?.url || "/uploads/about_profile.jpg"}
               alt={aboutImage?.alt || "גל פרידמן מלכה"}
               className="w-full h-full object-cover"
-              style={{ objectPosition: "center 25%" }}
+              style={{ objectPosition: "center 15%" }}
             />
           </div>
         </div>
