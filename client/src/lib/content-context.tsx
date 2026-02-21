@@ -45,7 +45,7 @@ export type ContentState = {
   };
   gallery: {
     title: string;
-    images: { id: number; url: string; alt: string }[];
+    images: { id: number; url: string; alt: string; positionX: number; positionY: number }[];
   };
   contact: {
     title: string;
@@ -132,9 +132,9 @@ const defaultContent: ContentState = {
   gallery: {
     title: "הקליניקה והאווירה",
     images: [
-      { id: 1, url: img1, alt: "קליניקה" },
-      { id: 2, url: img2, alt: "אווירה" },
-      { id: 3, url: img3, alt: "זוגיות" }
+      { id: 1, url: img1, alt: "קליניקה", positionX: 50, positionY: 50 },
+      { id: 2, url: img2, alt: "אווירה", positionX: 50, positionY: 50 },
+      { id: 3, url: img3, alt: "זוגיות", positionX: 50, positionY: 50 }
     ],
   },
   contact: {
@@ -155,15 +155,15 @@ const defaultImageSlots: Record<string, ImageSlot> = {
 };
 
 const defaultGalleryImages = [
-  { id: 1, url: img1, alt: "קליניקה" },
-  { id: 2, url: img2, alt: "אווירה" },
-  { id: 3, url: img3, alt: "זוגיות" }
+  { id: 1, url: img1, alt: "קליניקה", positionX: 50, positionY: 50 },
+  { id: 2, url: img2, alt: "אווירה", positionX: 50, positionY: 50 },
+  { id: 3, url: img3, alt: "זוגיות", positionX: 50, positionY: 50 }
 ];
 
 function buildContentState(
   textMap: Record<string, string> | undefined,
   imageSlots: Array<{ id: number; slotKey: string; filePath: string | null; alt: string; aspectRatioLabel: string; positionX: number; positionY: number }> | undefined,
-  galleryImages: Array<{ id: number; filePath: string; alt: string; sortOrder: number }> | undefined
+  galleryImages: Array<{ id: number; filePath: string; alt: string; sortOrder: number; positionX: number; positionY: number }> | undefined
 ): ContentState {
   const t = (key: string, fallback: string) => textMap?.[key] ?? fallback;
 
@@ -181,7 +181,7 @@ function buildContentState(
   }
 
   const gallery = galleryImages && galleryImages.length > 0
-    ? galleryImages.map(g => ({ id: g.id, url: g.filePath, alt: g.alt }))
+    ? galleryImages.map(g => ({ id: g.id, url: g.filePath, alt: g.alt, positionX: g.positionX ?? 50, positionY: g.positionY ?? 50 }))
     : defaultGalleryImages;
 
   return {
@@ -250,7 +250,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/image-slots"],
   });
 
-  const { data: galleryImages, isLoading: galleryLoading } = useQuery<Array<{ id: number; filePath: string; alt: string; sortOrder: number }>>({
+  const { data: galleryImages, isLoading: galleryLoading } = useQuery<Array<{ id: number; filePath: string; alt: string; sortOrder: number; positionX: number; positionY: number }>>({
     queryKey: ["/api/gallery"],
   });
 

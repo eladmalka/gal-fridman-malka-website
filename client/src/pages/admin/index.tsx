@@ -87,6 +87,8 @@ export default function Admin() {
 
   const [localGalleryAlts, setLocalGalleryAlts] = useState<Record<number, string>>({});
   const [savedGalleryAlts, setSavedGalleryAlts] = useState<Record<number, string>>({});
+  const [localGalleryPositions, setLocalGalleryPositions] = useState<Record<number, { x: number; y: number }>>({});
+  const [savedGalleryPositions, setSavedGalleryPositions] = useState<Record<number, { x: number; y: number }>>({});
   const [showGallerySaveConfirm, setShowGallerySaveConfirm] = useState(false);
 
   const [localSlotAlts, setLocalSlotAlts] = useState<Record<string, string>>({});
@@ -378,11 +380,15 @@ export default function Admin() {
 
   useEffect(() => {
     const alts: Record<number, string> = {};
+    const positions: Record<number, { x: number; y: number }> = {};
     for (const img of content.gallery.images) {
       alts[img.id] = img.alt;
+      positions[img.id] = { x: img.positionX, y: img.positionY };
     }
     setLocalGalleryAlts(alts);
     setSavedGalleryAlts(alts);
+    setLocalGalleryPositions(positions);
+    setSavedGalleryPositions(positions);
   }, [content.gallery.images]);
 
   useEffect(() => {
@@ -1303,34 +1309,115 @@ export default function Admin() {
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
-                {displayGalleryImages.map((img) => (
+                {displayGalleryImages.map((img) => {
+                  const gPos = localGalleryPositions[img.id] ?? { x: 50, y: 50 };
+                  const gSavedPos = savedGalleryPositions[img.id] ?? { x: 50, y: 50 };
+                  const hasPositionChange = gPos.x !== gSavedPos.x || gPos.y !== gSavedPos.y;
+                  return (
                   <Card
                     key={img.id}
-                    className={`p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white transition-all ${dragOverGalleryId === img.id ? "ring-2 ring-primary/50 bg-primary/5" : ""} ${draggedGalleryId === img.id ? "opacity-50" : ""}`}
+                    className={`p-4 space-y-3 bg-white transition-all ${dragOverGalleryId === img.id ? "ring-2 ring-primary/50 bg-primary/5" : ""} ${draggedGalleryId === img.id ? "opacity-50" : ""}`}
                     draggable
                     onDragStart={() => handleGalleryDragStart(img.id)}
                     onDragOver={(e) => handleGalleryDragOver(e, img.id)}
                     onDrop={() => handleGalleryDrop(img.id)}
                     onDragEnd={() => { setDraggedGalleryId(null); setDragOverGalleryId(null); }}
                   >
-                    <div className="cursor-grab text-muted-foreground hover:text-foreground hidden sm:block">
-                      <GripVertical />
+                    <div className="flex items-center gap-4">
+                      <div className="cursor-grab text-muted-foreground hover:text-foreground hidden sm:block">
+                        <GripVertical />
+                      </div>
+                      <div className="flex-grow w-full sm:w-auto">
+                        <Label className="text-xs mb-1 block text-muted-foreground">טקסט חלופי (Alt)</Label>
+                        <Input
+                          value={localGalleryAlts[img.id] ?? img.alt}
+                          onChange={(e) => setLocalGalleryAlts(prev => ({ ...prev, [img.id]: e.target.value }))}
+                          placeholder="טקסט חלופי (Alt)"
+                          className="w-full bg-transparent"
+                        />
+                      </div>
+                      <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0" size="icon" onClick={() => { setGalleryDeleteTargetId(img.id); setShowGalleryDeleteConfirm(true); }} data-testid={`btn-delete-img-${img.id}`}>
+                        <Trash2 size={18} />
+                      </Button>
                     </div>
-                    <img src={img.url} alt={img.alt} className="w-20 h-20 object-cover rounded-md" />
-                    <div className="flex-grow w-full sm:w-auto">
-                      <Label className="text-xs mb-1 block text-muted-foreground">טקסט חלופי (Alt)</Label>
-                      <Input
-                        value={localGalleryAlts[img.id] ?? img.alt}
-                        onChange={(e) => setLocalGalleryAlts(prev => ({ ...prev, [img.id]: e.target.value }))}
-                        placeholder="טקסט חלופי (Alt)"
-                        className="w-full bg-transparent"
-                      />
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium flex items-center gap-1 text-muted-foreground">
+                        <Move size={12} />
+                        כיוונון מיקום התמונה
+                      </Label>
+                      <div className="max-w-xs mx-auto">
+                        <div
+                          className="relative w-full aspect-square rounded-xl overflow-hidden cursor-crosshair border-2 border-dashed border-primary/30 bg-secondary"
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                            const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                            setLocalGalleryPositions(prev => ({ ...prev, [img.id]: { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } }));
+                          }}
+                        >
+                          <img
+                            src={img.url}
+                            alt={img.alt}
+                            className="w-full h-full object-cover pointer-events-none"
+                            style={{ objectPosition: `${gPos.x}% ${gPos.y}%` }}
+                          />
+                          <div
+                            className="absolute w-6 h-6 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                            style={{ left: `${gPos.x}%`, top: `${gPos.y}%` }}
+                          >
+                            <div className="absolute inset-0 rounded-full border-2 border-white shadow-lg bg-primary/40" />
+                            <Crosshair className="w-full h-full text-white drop-shadow-lg" />
+                          </div>
+                          <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-xs text-center py-1">
+                            {gPos.x}% רוחב, {gPos.y}% גובה
+                          </div>
+                        </div>
+                        <p className="text-xs text-center text-muted-foreground mt-1">התצוגה משקפת את הצורה בדף הנחיתה (ריבוע)</p>
+                      </div>
+                      <div className="flex items-center gap-4 max-w-xs mx-auto">
+                        <div className="flex-1 space-y-1">
+                          <Label className="text-xs text-muted-foreground">שמאל / ימין ({gPos.x}%)</Label>
+                          <input
+                            type="range" min={0} max={100} value={gPos.x}
+                            onChange={(e) => setLocalGalleryPositions(prev => ({ ...prev, [img.id]: { ...prev[img.id], x: Number(e.target.value) } }))}
+                            className="w-full accent-primary"
+                          />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <Label className="text-xs text-muted-foreground">למעלה / למטה ({gPos.y}%)</Label>
+                          <input
+                            type="range" min={0} max={100} value={gPos.y}
+                            onChange={(e) => setLocalGalleryPositions(prev => ({ ...prev, [img.id]: { ...prev[img.id], y: Number(e.target.value) } }))}
+                            className="w-full accent-primary"
+                          />
+                        </div>
+                      </div>
+                      {hasPositionChange && (
+                        <div className="max-w-xs mx-auto">
+                          <Button
+                            size="sm"
+                            className="w-full"
+                            onClick={async () => {
+                              try {
+                                await apiRequest("PUT", `/api/gallery/${img.id}`, { positionX: gPos.x, positionY: gPos.y });
+                                setSavedGalleryPositions(prev => ({ ...prev, [img.id]: { x: gPos.x, y: gPos.y } }));
+                                refetchContent();
+                                toast({ title: "מיקום המוקד נשמר בהצלחה" });
+                              } catch {
+                                toast({ variant: "destructive", title: "שגיאה", description: "שמירת המיקום נכשלה." });
+                              }
+                            }}
+                          >
+                            <Save size={14} className="ml-2" />
+                            שמור מיקום מוקד
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive self-end sm:self-auto" size="icon" onClick={() => { setGalleryDeleteTargetId(img.id); setShowGalleryDeleteConfirm(true); }} data-testid={`btn-delete-img-${img.id}`}>
-                      <Trash2 size={18} />
-                    </Button>
                   </Card>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
           </TabsContent>

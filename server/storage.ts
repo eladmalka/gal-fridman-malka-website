@@ -36,6 +36,7 @@ export interface IStorage {
   getAllGalleryImages(): Promise<GalleryImage[]>;
   addGalleryImage(filePath: string, alt: string, sortOrder: number): Promise<GalleryImage>;
   updateGalleryImage(id: number, alt: string): Promise<void>;
+  updateGalleryImagePosition(id: number, positionX: number, positionY: number): Promise<void>;
   deleteGalleryImage(id: number): Promise<void>;
   reorderGalleryImages(ids: number[]): Promise<void>;
 
@@ -119,6 +120,10 @@ export class DatabaseStorage implements IStorage {
 
   async updateGalleryImage(id: number, alt: string): Promise<void> {
     await db.update(galleryImages).set({ alt, updatedAt: new Date() }).where(eq(galleryImages.id, id));
+  }
+
+  async updateGalleryImagePosition(id: number, positionX: number, positionY: number): Promise<void> {
+    await db.update(galleryImages).set({ positionX, positionY, updatedAt: new Date() }).where(eq(galleryImages.id, id));
   }
 
   async deleteGalleryImage(id: number): Promise<void> {

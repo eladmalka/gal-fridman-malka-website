@@ -237,8 +237,11 @@ export async function registerRoutes(
   app.put("/api/gallery/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { alt } = req.body;
-      await storage.updateGalleryImage(id, alt);
+      const { alt, positionX, positionY } = req.body;
+      if (alt !== undefined) await storage.updateGalleryImage(id, alt);
+      if (positionX !== undefined && positionY !== undefined) {
+        await storage.updateGalleryImagePosition(id, positionX, positionY);
+      }
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to update gallery image" });

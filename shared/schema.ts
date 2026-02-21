@@ -25,6 +25,8 @@ export const galleryImages = pgTable("gallery_images", {
   filePath: text("file_path").notNull(),
   alt: text("alt").notNull().default(""),
   sortOrder: integer("sort_order").notNull().default(0),
+  positionX: integer("position_x").notNull().default(50),
+  positionY: integer("position_y").notNull().default(50),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

@@ -19,6 +19,7 @@ export function Gallery() {
                 src={img.url} 
                 alt={img.alt} 
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                style={{ objectPosition: `${img.positionX}% ${img.positionY}%` }}
               />
             </div>
           ))}
