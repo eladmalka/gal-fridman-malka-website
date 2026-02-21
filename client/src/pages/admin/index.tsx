@@ -1138,39 +1138,52 @@ export default function Admin() {
                         </Button>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <Label className="text-sm font-medium flex items-center gap-2">
                           <Move size={14} />
-                          מיקום מוקד התמונה - לחצי על התמונה לבחירת נקודת המוקד
+                          כיוונון מיקום התמונה
                         </Label>
-                        <div
-                          className="relative w-full max-w-md mx-auto aspect-[4/3] rounded-lg overflow-hidden cursor-crosshair border-2 border-dashed border-primary/30 bg-secondary"
-                          onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-                            const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-                            setLocalSlotPositions(prev => ({ ...prev, [key]: { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } }));
-                          }}
-                        >
-                          <img
-                            src={slot.url}
-                            alt={slot.alt}
-                            className="w-full h-full object-cover pointer-events-none"
-                          />
+
+                        <div className="space-y-3 max-w-md mx-auto">
+                          <p className="text-xs text-muted-foreground text-center">גררי את הסליידרים או לחצי על התמונה כדי לבחור את נקודת המוקד</p>
                           <div
-                            className="absolute w-8 h-8 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                            style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                            className={`relative overflow-hidden cursor-crosshair border-2 border-dashed border-primary/30 bg-secondary mx-auto ${
+                              key === "ABOUT_IMAGE" ? "w-48 h-48 rounded-full" :
+                              key === "HERO_BACKGROUND" ? "w-full aspect-[16/9] rounded-lg" :
+                              "w-full aspect-[2/3] rounded-lg"
+                            }`}
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                              const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                              setLocalSlotPositions(prev => ({ ...prev, [key]: { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) } }));
+                            }}
                           >
-                            <div className="absolute inset-0 rounded-full border-2 border-white shadow-lg" />
-                            <Crosshair className="w-full h-full text-white drop-shadow-lg" />
+                            <img
+                              src={slot.url}
+                              alt={slot.alt}
+                              className="w-full h-full object-cover pointer-events-none"
+                              style={{ objectPosition: `${pos.x}% ${pos.y}%` }}
+                            />
+                            <div
+                              className="absolute w-6 h-6 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                              style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                            >
+                              <div className="absolute inset-0 rounded-full border-2 border-white shadow-lg bg-primary/40" />
+                              <Crosshair className="w-full h-full text-white drop-shadow-lg" />
+                            </div>
+                            <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-xs text-center py-1 rounded-b-lg">
+                              {pos.x}% רוחב, {pos.y}% גובה
+                            </div>
                           </div>
-                          <div className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-xs text-center py-1">
-                            מיקום: {pos.x}% רוחב, {pos.y}% גובה
-                          </div>
+                          <p className="text-xs text-center text-muted-foreground">
+                            התצוגה משקפת את הצורה בדף הנחיתה • {key === "ABOUT_IMAGE" ? "עיגול" : key === "HERO_BACKGROUND" ? "רוחב מלא" : "גובה מלא"}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-4 max-w-md mx-auto">
+
+                        <div className="flex items-center gap-4 max-w-lg mx-auto">
                           <div className="flex-1 space-y-1">
-                            <Label className="text-xs text-muted-foreground">רוחב ({pos.x}%)</Label>
+                            <Label className="text-xs text-muted-foreground">שמאל / ימין ({pos.x}%)</Label>
                             <input
                               type="range"
                               min={0}
@@ -1181,7 +1194,7 @@ export default function Admin() {
                             />
                           </div>
                           <div className="flex-1 space-y-1">
-                            <Label className="text-xs text-muted-foreground">גובה ({pos.y}%)</Label>
+                            <Label className="text-xs text-muted-foreground">למעלה / למטה ({pos.y}%)</Label>
                             <input
                               type="range"
                               min={0}
@@ -1193,7 +1206,7 @@ export default function Admin() {
                           </div>
                         </div>
                         {(pos.x !== (savedSlotPositions[key]?.x ?? 50) || pos.y !== (savedSlotPositions[key]?.y ?? 50)) && (
-                          <div className="max-w-md mx-auto">
+                          <div className="max-w-lg mx-auto">
                             <Button
                               size="sm"
                               className="w-full"
