@@ -767,7 +767,7 @@ export default function Admin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 dir="ltr"
-                className="bg-white"
+                className="bg-card"
                 disabled={isLockedOut}
                 data-testid="input-admin-password"
               />
@@ -800,7 +800,7 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="leads" className="w-full" dir="rtl">
-          <TabsList className="grid w-full grid-cols-5 h-14 bg-white shadow-sm border border-border/50">
+          <TabsList className="grid w-full grid-cols-5 h-14 bg-card shadow-sm border border-border/50">
             <TabsTrigger value="leads" className="h-full data-[state=active]:bg-primary/10 data-[state=active]:text-primary relative" data-testid="tab-leads">
               פניות
               {unseenCount > 0 && (
@@ -844,7 +844,7 @@ export default function Admin() {
                   </div>
                 ) : (
                   leadsData.map((lead) => (
-                    <Card key={lead.id} className={`p-5 transition-all ${!lead.seen ? "border-primary/40 bg-primary/5 shadow-md" : "bg-white border-border/50"}`} data-testid={`card-lead-${lead.id}`}>
+                    <Card key={lead.id} className={`p-5 transition-all ${!lead.seen ? "border-primary/40 bg-primary/5 shadow-md" : "bg-card border-border/50"}`} data-testid={`card-lead-${lead.id}`}>
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-grow space-y-3">
                           <div className="flex items-center gap-3 flex-wrap">
@@ -1240,7 +1240,7 @@ export default function Admin() {
                           value={localSlotAlts[key] ?? slot.alt}
                           onChange={(e) => setLocalSlotAlts(prev => ({ ...prev, [key]: e.target.value }))}
                           placeholder="תיאור התמונה לנגישות"
-                          className="bg-white"
+                          className="bg-card"
                         />
                       </div>
                     </Card>
@@ -1252,7 +1252,7 @@ export default function Admin() {
 
           {/* === GALLERY TAB === */}
           <TabsContent value="gallery" className="mt-6 space-y-6">
-            <Card className="border-dashed bg-white/50">
+            <Card className="border-dashed bg-card/50">
               <CardContent className="pt-6 flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <ImagePlus size={48} className="mb-4 opacity-50" />
                 {content.gallery.images.length >= MAX_GALLERY_IMAGES ? (
@@ -1298,12 +1298,12 @@ export default function Admin() {
                   </div>
                 </div>
                 {hasGalleryOrderChanges && (
-                  <div className="mt-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+                  <div className="mt-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
                     שינית את סדר התמונות — לחצי על "שמור סדר" לשמירה, או "בטל שינויי סדר" כדי לחזור למצב הקודם.
                   </div>
                 )}
                 {hasGalleryAltChanges && (
-                  <div className="mt-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
                     יש שינויים בתיאורים שלא נשמרו - לחצי על "שמור תיאורים" לשמירה.
                   </div>
                 )}
@@ -1316,7 +1316,7 @@ export default function Admin() {
                   return (
                   <Card
                     key={img.id}
-                    className={`p-4 space-y-3 bg-white transition-all ${dragOverGalleryId === img.id ? "ring-2 ring-primary/50 bg-primary/5" : ""} ${draggedGalleryId === img.id ? "opacity-50" : ""}`}
+                    className={`p-4 space-y-3 bg-card transition-all ${dragOverGalleryId === img.id ? "ring-2 ring-primary/50 bg-primary/5" : ""} ${draggedGalleryId === img.id ? "opacity-50" : ""}`}
                     draggable
                     onDragStart={() => handleGalleryDragStart(img.id)}
                     onDragOver={(e) => handleGalleryDragOver(e, img.id)}
@@ -1684,7 +1684,7 @@ export default function Admin() {
       {/* New Lead Notification Popup */}
       {showNewLeadPopup && newLeadPopupData && (
         <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-4 duration-500" dir="rtl" data-testid="popup-new-lead">
-          <Card className="w-80 border-primary/30 shadow-xl bg-white overflow-hidden">
+          <Card className="w-80 border-primary/30 shadow-xl bg-card overflow-hidden">
             <div className="bg-primary/10 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2 text-primary font-bold">
                 <BellRing size={18} className="animate-bounce" />
